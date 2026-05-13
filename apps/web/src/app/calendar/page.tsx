@@ -1,106 +1,136 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
+import { authClient } from "@/lib/auth-client";
+import { Calendar } from "@kononia/ui/components/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Button } from "@kononia/ui/components/button";
+import { Badge } from "@kononia/ui/components/badge";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
-const FASTING_TYPE_COLORS: Record<string, string> = {
-  strict: "bg-fast-strict text-white",
-  regular: "bg-fast-regular text-white",
-  feast: "bg-fast-feast text-foreground",
-};
-
-const FASTING_TYPE_LABELS: Record<string, string> = {
-  strict: "Strict",
-  regular: "Regular",
-  feast: "Feast",
+const FASTING_TYPE_STYLES: Record<string, { bg: string; label: string }> = {
+  strict: { bg: "bg-fast-strict", label: "Strict Fast" },
+  regular: { bg: "bg-fast-regular", label: "Regular Fast" },
+  feast: { bg: "bg-fast-feast", label: "Feast Day" },
 };
 
 export default function CalendarPage() {
   const trpc = useTRPC();
+  const { data: session } = authClient.useSession();
+  
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   
   const startDate = new Date(year, month, 1).toISOString().split("T")[0];
   const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
   
-  const { data: fastDays } = useQuery(trpc.calendar.getFastDaysInRange.queryOptions({
-    startDate,
-    endDate,
-  }));
+  const { data: fastDays } = useQuery(
+    trpc.calendar.getFastDaysInRange.queryOptions({ startDate, endDate })
+  );
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const { data: selectedDayData } = useQuery(
+    selectedDate 
+      ? trpc.calendar.getFastDay.queryOptions({ date: selectedDate.toISOString().split("T")[0] })
+      : null
+  );
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const { data: currentSeason } = useQuery(trpc.seasons.getCurrent.queryOptions());
 
-  const getFastDay = (day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return fastDays?.find(fd => fd.date === dateStr);
+  const getFastingTypeForDate = (date: Date) => {
+    if (!fastDays) return null;
+    const dateStr = date.toISOString().split("T")[0];
+    const day = fastDays.find(d => d.date === dateStr);
+    return day?.fastingType || null;
   };
 
+  const handlePreviousMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  const modifiers = {
+    fasting: (date: Date) => {
+      const fastingType = getFastingTypeForDate(date);
+      return fastingType !== null;
+    },
+    strictFast: (date: Date) => getFastingTypeForDate(date) === "strict",
+    regularFast: (date: Date) => getFastingTypeForDate(date) === "regular",
+    feast: (date: Date) => getFastingTypeForDate(date) === "feast",
+  };
+
+  const modifiersStyles = {
+    fasting: { 
+      backgroundColor: "#FDF8F3",
+      border: "2px solid #4A7C59",
+    },
+    strictFast: { 
+      backgroundColor: "#722F37", 
+      color: "white",
+    },
+    regularFast: { 
+      backgroundColor: "#C9A96E", 
+    },
+    feast: { 
+      backgroundColor: "#4A7C59", 
+      color: "white",
+    },
+  };
+
+  if (!session) {
+    return (
+      <div className="container mx-auto max-w-4xl px-4 py-6 text-center">
+        <p className="text-muted-foreground">Please sign in to view the calendar.</p>
+      </div>
+    );
+  }
+
+  const selectedFastingType = selectedDayData?.fastingType;
+
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto max-w-4xl px-4 py-6 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl text-foreground">Fasting Calendar</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={prevMonth}>
-            ←
-          </Button>
-          <span className="font-medium min-w-[120px] text-center">
-            {MONTHS[month]} {year}
-          </span>
-          <Button variant="outline" size="sm" onClick={nextMonth}>
-            →
-          </Button>
-        </div>
+        {currentSeason && (
+          <Badge variant="outline" className="bg-fast-regular text-white">
+            {currentSeason.name}
+          </Badge>
+        )}
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-          <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-            {day}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle>{MONTHS[month]} {year}</CardTitle>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
+              ←
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleNextMonth}>
+              →
+            </Button>
           </div>
-        ))}
-      </div>
+        </CardHeader>
+        <CardContent>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            month={currentDate}
+            onMonthChange={setCurrentDate}
+            modifiers={modifiers}
+            modifiersStyles={modifiersStyles}
+            className="w-full"
+          />
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-7 gap-1">
-        {Array(firstDay).fill(null).map((_, i) => (
-          <div key={`empty-${i}`} className="aspect-square" />
-        ))}
-        {Array(daysInMonth).fill(null).map((_, i) => {
-          const day = i + 1;
-          const fastDay = getFastDay(day);
-          const fastingType = fastDay?.fastingType as string;
-          const colorClass = fastingType && FASTING_TYPE_COLORS[fastingType] 
-            ? FASTING_TYPE_COLORS[fastingType]
-            : "bg-background";
-          
-          return (
-            <button
-              key={day}
-              className={`aspect-square rounded-md border p-1 text-sm transition-colors hover:bg-secondary ${colorClass}`}
-            >
-              <span className="block">{day}</span>
-              {fastDay && fastingType && (
-                <span className="text-[10px] block opacity-80">
-                  {FASTING_TYPE_LABELS[fastingType] || fastingType}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-6 flex gap-4 justify-center">
+      <div className="flex gap-4 justify-center">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-fast-strict" />
           <span className="text-sm">Strict Fast</span>
@@ -114,6 +144,38 @@ export default function CalendarPage() {
           <span className="text-sm">Feast</span>
         </div>
       </div>
+
+      {selectedDate && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {selectedDate.toLocaleDateString("en-US", { 
+                weekday: "long", 
+                year: "numeric", 
+                month: "long", 
+                day: "numeric" 
+              })}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedFastingType ? (
+              <div className="space-y-2">
+                <div className={`inline-block px-3 py-1 rounded text-white ${
+                  selectedFastingType === "strict" ? "bg-fast-strict" :
+                  selectedFastingType === "regular" ? "bg-fast-regular" : "bg-fast-feast"
+                }`}>
+                  {FASTING_TYPE_STYLES[selectedFastingType]?.label || selectedFastingType}
+                </div>
+                {selectedDayData?.fastNotes && (
+                  <p className="text-muted-foreground">{selectedDayData.fastNotes}</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No fasting information for this day.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
