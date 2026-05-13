@@ -9,9 +9,7 @@ import { Label } from "@kononia/ui/components/label";
 
 export default function SettingsPage() {
   const { data: session } = authClient.useSession();
-  const { data: user } = trpc.user.getProfile.useQuery(undefined, {
-    enabled: !!session,
-  });
+  const { data: user } = session ? trpc.user.getProfile.useQuery() : { data: null };
 
   const syncMutation = useMutation({
     mutationFn: async () => {

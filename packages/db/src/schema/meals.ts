@@ -25,8 +25,8 @@ export const mealIngredients = sqliteTable("meal_ingredients", {
   mealId: text("meal_id")
     .notNull()
     .references(() => meals.id, { onDelete: "cascade" }),
-  ingredient: text("ingredient").notNull(),
   orderIndex: integer("order_index").notNull(),
+  ingredient: text("ingredient").notNull(),
 });
 
 export const mealIngredientRelations = relations(mealIngredients, ({ one }) => ({
