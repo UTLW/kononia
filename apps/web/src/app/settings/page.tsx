@@ -2,16 +2,27 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
-import { useSession, signIn } from "@kononia/auth-client/client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Label } from "@kononia/ui/components/label";
 
 export default function SettingsPage() {
   const trpc = useTRPC();
-  const session = useSession();
+  const { data: session } = authClient.useSession();
   const { data: user } = useQuery(trpc.user.getProfile.queryOptions(), {
-    enabled: !!session.data,
+    enabled: !!session,
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/sync/coptic`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Sync failed");
+      return res.json();
+    },
   });
 
   const handleUpgrade = async () => {

@@ -10,7 +10,7 @@ import { db } from "@kononia/db";
 import { user } from "@kononia/db/schema/auth";
 import { seasons, fastDays } from "@kononia/db";
 import { eq } from "drizzle-orm";
-import { polarClient } from "@kononia/auth/src/lib/payments";
+import { polarClient } from "@kononia/auth/lib/payments";
 import { getYearFastingCalendar, getYearSeasons, getTodayCopticDate } from "./lib/coptic-api";
 
 const app = express();

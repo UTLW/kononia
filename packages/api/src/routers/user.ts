@@ -1,7 +1,9 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../index";
-import { user } from "@kononia/db";
+import { protectedProcedure, publicProcedure, router } from "../index";
+import { user, seasons, fastDays } from "@kononia/db";
 import { eq } from "drizzle-orm";
+
+const COPTC_API_BASE = "https://api.coptic.io/api";
 
 export const userRouter = router({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -11,6 +13,67 @@ export const userRouter = router({
       .limit(1);
     
     return result[0] || null;
+  }),
+
+  syncCopticData: protectedProcedure.mutation(async ({ ctx }) => {
+    const year = new Date().getFullYear();
+    
+    const fastingRes = await fetch(`${COPTC_API_BASE}/fasting/calendar/${year}`);
+    const fastingData = await fastingRes.json();
+    const fastingDays = fastingData.days || [];
+
+    const seasonsRes = await fetch(`${COPTC_API_BASE}/season/year/${year}`);
+    const seasonsData = await seasonsRes.json();
+    const seasonsList = seasonsData.seasons || [];
+
+    for (const day of fastingDays) {
+      await ctx.db.insert(fastDays)
+        .values({
+          date: day.date,
+          fastingType: day.fastingType,
+          fastNotes: day.name || null,
+        })
+        .onConflictDoUpdate({
+          target: fastDays.date,
+          set: {
+            fastingType: day.fastingType,
+            fastNotes: day.name || null,
+          },
+        });
+    }
+
+    for (const season of seasonsList) {
+      await ctx.db.insert(seasons)
+        .values({
+          id: season.id,
+          name: season.name,
+          description: season.description || season.name,
+          startDate: season.startDate,
+          endDate: season.endDate,
+          fastingType: season.fastingType,
+          strictRules: null,
+          regularRules: null,
+          year,
+          copticMonth: season.copticMonth || null,
+          copticStartDay: null,
+        })
+        .onConflictDoUpdate({
+          target: seasons.id,
+          set: {
+            name: season.name,
+            description: season.description || season.name,
+            startDate: season.startDate,
+            endDate: season.endDate,
+            fastingType: season.fastingType,
+          },
+        });
+    }
+
+    return { 
+      success: true, 
+      fastingDaysCount: fastingDays.length,
+      seasonsCount: seasonsList.length,
+    };
   }),
 
   updatePlan: protectedProcedure

@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
-import { useSession, signIn } from "@kononia/auth-client/client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 
 const FASTING_TYPE_COLORS: Record<string, string> = {
@@ -19,7 +20,27 @@ const FASTING_TYPE_LABELS: Record<string, string> = {
 
 export default function HomePage() {
   const trpc = useTRPC();
-  const { data: session, isLoading: sessionLoading } = useSession();
+  const { data: session, isLoading: sessionLoading } = authClient.useSession();
+  const hasSynced = useRef(false);
+  
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/sync/coptic`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Sync failed");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (session && !hasSynced.current) {
+      hasSynced.current = true;
+      syncMutation.mutate();
+    }
+  }, [session]);
+
   const { data: fastDay } = useQuery(trpc.calendar.getTodayFastDay.queryOptions());
   const { data: season } = useQuery(trpc.seasons.getCurrent.queryOptions());
   const { data: meals } = useQuery(trpc.meals.list.queryOptions({ 
@@ -46,7 +67,7 @@ export default function HomePage() {
           </p>
           <Button 
             size="lg" 
-            onClick={() => signIn()}
+            onClick={() => authClient.signIn.email()}
             className="bg-white text-primary hover:bg-white/90"
           >
             Sign In to Continue
