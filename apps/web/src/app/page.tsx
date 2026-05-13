@@ -1,29 +1,73 @@
 "use client";
 
-import { trpc } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
+import { useSession, signIn } from "@kononia/auth-client/client";
+import { Button } from "@kononia/ui/components/button";
 
-const FASTING_TYPE_COLORS = {
+const FASTING_TYPE_COLORS: Record<string, string> = {
   strict: "bg-fast-strict",
   regular: "bg-fast-regular", 
   feast: "bg-fast-feast",
 };
 
-const FASTING_TYPE_LABELS = {
+const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
   regular: "Regular Fast",
   feast: "Feast Day",
 };
 
 export default function HomePage() {
-  const { data: fastDay } = trpc.calendar.getTodayFastDay.useQuery();
-  const { data: season } = trpc.seasons.getCurrent.useQuery();
-  const { data: meals } = trpc.meals.list.useQuery({ 
+  const trpc = useTRPC();
+  const { data: session, isLoading: sessionLoading } = useSession();
+  const { data: fastDay } = useQuery(trpc.calendar.getTodayFastDay.queryOptions());
+  const { data: season } = useQuery(trpc.seasons.getCurrent.queryOptions());
+  const { data: meals } = useQuery(trpc.meals.list.queryOptions({ 
     fastingType: fastDay?.fastingType || "regular",
     limit: 3 
-  });
+  }));
+
+  if (sessionLoading) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-6 text-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-6 space-y-6">
+        <section className="rounded-xl p-8 text-center bg-fast-regular text-white">
+          <h1 className="font-serif text-4xl mb-4">ⲔⲞⲚⲞⲚⲒⲀ</h1>
+          <p className="text-lg mb-4">Orthodox Christian Family Fasting Companion</p>
+          <p className="text-white/80 mb-6">
+            Track liturgical fasting days, find recipes, and follow the Coptic Orthodox tradition.
+          </p>
+          <Button 
+            size="lg" 
+            onClick={() => signIn()}
+            className="bg-white text-primary hover:bg-white/90"
+          >
+            Sign In to Continue
+          </Button>
+        </section>
+
+        <section className="rounded-lg border bg-card p-6">
+          <h2 className="font-serif text-xl mb-4 text-card-foreground">Features</h2>
+          <ul className="space-y-2 text-muted-foreground">
+            <li>📅 Fasting calendar with Coptic seasons</li>
+            <li>🍽️ Orthodox fasting recipes and meal ideas</li>
+            <li>🥗 Snack guide for fasting days</li>
+            <li>📱 Available on web and mobile</li>
+          </ul>
+        </section>
+      </div>
+    );
+  }
 
   const fastingType = fastDay?.fastingType || "regular";
-  const colorClass = FASTING_TYPE_COLORS[fastingType as keyof typeof FASTING_TYPE_COLORS] || "bg-fast-regular";
+  const colorClass = FASTING_TYPE_COLORS[fastingType] || "bg-fast-regular";
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 space-y-6">

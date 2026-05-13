@@ -1,43 +1,81 @@
 "use client";
 
-import { trpc } from "@/utils/trpc";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
+import { useSession, signIn } from "@kononia/auth-client/client";
+import { Button } from "@kononia/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
+import { Label } from "@kononia/ui/components/label";
 
 export default function SettingsPage() {
-  const { data: user } = trpc.user.getProfile.useQuery();
+  const trpc = useTRPC();
+  const session = useSession();
+  const { data: user } = useQuery(trpc.user.getProfile.queryOptions(), {
+    enabled: !!session.data,
+  });
+
+  const handleUpgrade = async () => {
+    if (!session.data) {
+      signIn();
+      return;
+    }
+    try {
+      const result = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/polar-checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await result.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Failed to create checkout:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-serif text-2xl mb-6 text-foreground">Settings</h1>
 
-      <section className="rounded-lg border bg-card p-4 mb-6">
-        <h2 className="font-serif text-xl mb-4 text-card-foreground">Account</h2>
-        {user ? (
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm text-muted-foreground">Email</label>
-              <p className="text-foreground">{user.email}</p>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {session.data ? (
+            <div className="space-y-3">
+              <div>
+                <Label>Email</Label>
+                <p className="text-foreground">{user?.email || session.data.user.email}</p>
+              </div>
+              <div>
+                <Label>Display Name</Label>
+                <p className="text-foreground">{user?.displayName || user?.name || session.data.user.name}</p>
+              </div>
+              <div>
+                <Label>Timezone</Label>
+                <p className="text-foreground">{user?.timezone || "America/New_York"}</p>
+              </div>
+              <div>
+                <Label>Plan</Label>
+                <p className="text-foreground capitalize">{user?.plan || "free"}</p>
+              </div>
             </div>
-            <div>
-              <label className="text-sm text-muted-foreground">Display Name</label>
-              <p className="text-foreground">{user.displayName || user.name}</p>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground mb-4">Not logged in</p>
+              <Button onClick={() => signIn()}>Sign In</Button>
             </div>
-            <div>
-              <label className="text-sm text-muted-foreground">Timezone</label>
-              <p className="text-foreground">{user.timezone}</p>
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground">Plan</label>
-              <p className="text-foreground capitalize">{user.plan}</p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-muted-foreground">Not logged in</p>
-        )}
-      </section>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="rounded-lg border bg-card p-4 mb-6">
-        <h2 className="font-serif text-xl mb-4 text-card-foreground">Subscription</h2>
-        <div className="space-y-4">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Subscription</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="rounded-md bg-secondary p-4">
             <h3 className="font-medium text-secondary-foreground">Free Plan</h3>
             <p className="text-sm text-secondary-foreground mt-1">
@@ -55,23 +93,27 @@ export default function SettingsPage() {
             {user?.plan === "annual" ? (
               <p className="mt-3 text-primary font-medium">You are subscribed!</p>
             ) : (
-              <button className="mt-3 rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90">
-                Upgrade to Annual
-              </button>
+              <Button className="mt-3" onClick={handleUpgrade}>
+                {session.data ? "Upgrade to Annual" : "Sign in to Upgrade"}
+              </Button>
             )}
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="font-serif text-xl mb-4 text-card-foreground">About</h2>
-        <p className="text-muted-foreground">
-          ⲔⲞⲚⲞⲚⲒⲀ - Orthodox Christian Family Fasting Companion
-        </p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Following the Coptic Orthodox tradition of fasting.
-        </p>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>About</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            ⲔⲞⲚⲞⲚⲒⲀ - Orthodox Christian Family Fasting Companion
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Following the Coptic Orthodox tradition of fasting.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

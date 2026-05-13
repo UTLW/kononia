@@ -1,9 +1,11 @@
 "use client";
 
-import { trpc } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
 
 export default function SnacksPage() {
-  const { data: snacks } = trpc.meals.getSnacks.useQuery({});
+  const trpc = useTRPC();
+  const { data: snacks } = useQuery(trpc.meals.getSnacks.queryOptions({}));
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6">

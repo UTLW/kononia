@@ -1,26 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
+import { Button } from "@kononia/ui/components/button";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
-const FASTING_TYPE_COLORS = {
+const FASTING_TYPE_COLORS: Record<string, string> = {
   strict: "bg-fast-strict text-white",
   regular: "bg-fast-regular text-white",
   feast: "bg-fast-feast text-foreground",
 };
 
-const FASTING_TYPE_LABELS = {
+const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict",
   regular: "Regular",
   feast: "Feast",
 };
 
 export default function CalendarPage() {
+  const trpc = useTRPC();
   const [currentDate, setCurrentDate] = useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -28,10 +31,10 @@ export default function CalendarPage() {
   const startDate = new Date(year, month, 1).toISOString().split("T")[0];
   const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
   
-  const { data: fastDays } = trpc.calendar.getFastDaysInRange.useQuery({
+  const { data: fastDays } = useQuery(trpc.calendar.getFastDaysInRange.queryOptions({
     startDate,
     endDate,
-  });
+  }));
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -49,21 +52,15 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl text-foreground">Fasting Calendar</h1>
         <div className="flex items-center gap-2">
-          <button 
-            onClick={prevMonth}
-            className="rounded-md border px-3 py-1 hover:bg-secondary"
-          >
+          <Button variant="outline" size="sm" onClick={prevMonth}>
             ←
-          </button>
+          </Button>
           <span className="font-medium min-w-[120px] text-center">
             {MONTHS[month]} {year}
           </span>
-          <button 
-            onClick={nextMonth}
-            className="rounded-md border px-3 py-1 hover:bg-secondary"
-          >
+          <Button variant="outline" size="sm" onClick={nextMonth}>
             →
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -82,8 +79,9 @@ export default function CalendarPage() {
         {Array(daysInMonth).fill(null).map((_, i) => {
           const day = i + 1;
           const fastDay = getFastDay(day);
-          const colorClass = fastDay 
-            ? FASTING_TYPE_COLORS[fastDay.fasteningType as keyof typeof FASTING_TYPE_COLORS]
+          const fastingType = fastDay?.fastingType as string;
+          const colorClass = fastingType && FASTING_TYPE_COLORS[fastingType] 
+            ? FASTING_TYPE_COLORS[fastingType]
             : "bg-background";
           
           return (
@@ -92,9 +90,9 @@ export default function CalendarPage() {
               className={`aspect-square rounded-md border p-1 text-sm transition-colors hover:bg-secondary ${colorClass}`}
             >
               <span className="block">{day}</span>
-              {fastDay && (
+              {fastDay && fastingType && (
                 <span className="text-[10px] block opacity-80">
-                  {FASTING_TYPE_LABELS[fastDay.fasteningType as keyof typeof FASTING_TYPE_LABELS]}
+                  {FASTING_TYPE_LABELS[fastingType] || fastingType}
                 </span>
               )}
             </button>
