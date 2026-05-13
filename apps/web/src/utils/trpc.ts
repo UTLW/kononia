@@ -1,16 +1,27 @@
 import type { AppRouter } from "@kononia/api/routers/index";
-import { createTRPCReact } from "@trpc/tanstack-react-query";
-import { httpBatchLink } from "@trpc/client";
-import { QueryClient } from "@tanstack/react-query";
+import { env } from "@kononia/env/web";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { toast } from "sonner";
 
-export const trpc = createTRPCReact<AppRouter>();
+export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      toast.error(error.message, {
+        action: {
+          label: "retry",
+          onClick: query.invalidate,
+        },
+      });
+    },
+  }),
+});
 
-export const queryClient = new QueryClient();
-
-export const trpcClient = trpc.createClient({
+const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/trpc`,
+      url: `${env.NEXT_PUBLIC_SERVER_URL}/trpc`,
       fetch(url, options) {
         return fetch(url, {
           ...options,
@@ -19,4 +30,9 @@ export const trpcClient = trpc.createClient({
       },
     }),
   ],
+});
+
+export const trpc = createTRPCOptionsProxy<AppRouter>({
+  client: trpcClient,
+  queryClient,
 });
