@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Calendar } from "@kononia/ui/components/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";

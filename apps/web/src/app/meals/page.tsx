@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 import Link from "next/link";
 import { Input } from "@kononia/ui/components/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@kononia/ui/components/select";

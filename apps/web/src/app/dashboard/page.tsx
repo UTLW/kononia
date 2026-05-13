@@ -1,6 +1,6 @@
 "use client";
 
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";

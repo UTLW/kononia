@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const trpc = useTRPC();
