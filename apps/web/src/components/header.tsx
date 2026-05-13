@@ -6,28 +6,34 @@ import UserMenu from "./user-menu";
 
 export default function Header() {
   const links = [
-    { to: "/", label: "Home" },
-    { to: "/dashboard", label: "Dashboard" },
+    { to: "/", label: "ⲔⲞⲚⲞⲚⲒⲀ" },
+    { to: "/calendar", label: "Calendar" },
+    { to: "/meals", label: "Meals" },
+    { to: "/snacks", label: "Snacks" },
+    { to: "/settings", label: "Settings" },
   ] as const;
 
   return (
     <div>
-      <div className="flex flex-row items-center justify-between px-2 py-1">
-        <nav className="flex gap-4 text-lg">
+      <div className="flex flex-row items-center justify-between px-4 py-2 bg-card border-b">
+        <nav className="flex gap-6 text-md font-medium">
           {links.map(({ to, label }) => {
             return (
-              <Link key={to} href={to}>
+              <Link 
+                key={to} 
+                href={to}
+                className="text-foreground hover:text-primary transition-colors"
+              >
                 {label}
               </Link>
             );
           })}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ModeToggle />
           <UserMenu />
         </div>
       </div>
-      <hr />
     </div>
   );
 }
