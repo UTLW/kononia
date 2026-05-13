@@ -1,15 +1,16 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Label } from "@kononia/ui/components/label";
 
 export default function SettingsPage() {
+  const trpc = useTRPC();
   const { data: session } = authClient.useSession();
-  const { data: user } = session ? trpc.user.getProfile.useQuery() : { data: null };
+  const { data: user } = trpc.user.getProfile.useQuery();
 
   const syncMutation = useMutation({
     mutationFn: async () => {

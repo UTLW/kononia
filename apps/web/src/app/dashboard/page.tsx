@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components
 import { Button } from "@kononia/ui/components/button";
 
 export default function DashboardPage() {
+  const trpc = useTRPC();
   const { data: session } = authClient.useSession();
   const { data: fastDay } = trpc.calendar.getTodayFastDay.useQuery();
   const { data: season } = trpc.seasons.getCurrent.useQuery();

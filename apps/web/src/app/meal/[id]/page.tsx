@@ -4,6 +4,7 @@ import { use } from "react";
 import { trpc } from "@/utils/trpc";
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const trpc = useTRPC();
   const { id } = use(params);
   const { data: meal, isLoading } = trpc.meals.get.useQuery({ id });
 

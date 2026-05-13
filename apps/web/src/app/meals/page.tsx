@@ -33,6 +33,7 @@ const CUISINES = Object.keys(CUISINE_LABELS).filter(k => k !== "");
 const FASTING_TYPES = Object.keys(FASTING_TYPE_LABELS).filter(k => k !== "");
 
 export default function MealsPage() {
+  const trpc = useTRPC();
   const [cuisine, setCuisine] = useState<string>("");
   const [fastingType, setFastingType] = useState<string>("");
   const [search, setSearch] = useState("");

@@ -20,6 +20,7 @@ const FASTING_TYPE_STYLES: Record<string, { bg: string; label: string }> = {
 };
 
 export default function CalendarPage() {
+  const trpc = useTRPC();
   const { data: session } = authClient.useSession();
   
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,9 +34,10 @@ export default function CalendarPage() {
   
   const { data: fastDays } = trpc.calendar.getFastDaysInRange.useQuery({ startDate, endDate });
 
-  const { data: selectedDayData } = selectedDate 
-    ? trpc.calendar.getFastDay.useQuery({ date: selectedDate.toISOString().split("T")[0] })
-    : { data: null };
+  const { data: selectedDayData } = trpc.calendar.getFastDay.useQuery(
+    { date: selectedDate?.toISOString().split("T")[0] || "" },
+    { enabled: !!selectedDate }
+  );
 
   const { data: currentSeason } = trpc.seasons.getCurrent.useQuery();
 

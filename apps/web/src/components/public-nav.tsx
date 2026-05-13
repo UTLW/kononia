@@ -5,14 +5,9 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Sheet, SheetContent, SheetTrigger } from "@kononia/ui/components/sheet";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/pricing", label: "Pricing" },
-];
+import { ModeToggle } from "@/components/mode-toggle";
 
 const publicLinks = [
   { href: "/about", label: "About" },
@@ -24,17 +19,15 @@ export function PublicNav() {
   const { data: session } = authClient.useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // If authenticated, show nothing (sidebar handles navigation)
   if (session) return null;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-serif text-xl text-primary">
+        <Link href="/" className="font-serif text-xl text-primary font-bold">
           ⲔⲞⲚⲞⲚⲒⲀ
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           {publicLinks.map((link) => (
             <Link
@@ -47,9 +40,12 @@ export function PublicNav() {
               {link.label}
             </Link>
           ))}
-          <Button asChild>
-            <Link href="/">Sign In</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ModeToggle />
+            <Button asChild size="sm">
+              <Link href="/">Sign In</Link>
+            </Button>
+          </div>
         </nav>
 
         {/* Mobile nav */}

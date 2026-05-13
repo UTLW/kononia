@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent } from "@kononia/ui/components/card";
 import { PublicNav } from "@/components/public-nav";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function HomePage() {
   const { data: session, isLoading } = authClient.useSession();

@@ -1,8 +1,9 @@
 "use client";
 
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 
 export default function SnacksPage() {
+  const trpc = useTRPC();
   const { data: snacks } = trpc.meals.getSnacks.useQuery({});
 
   return (
