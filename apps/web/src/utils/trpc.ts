@@ -46,4 +46,4 @@ export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRou
   queryClient,
 });
 
-export { queryClient };
+export { queryClient, trpcClient };
