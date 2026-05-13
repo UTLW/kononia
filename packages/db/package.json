@@ -27,6 +27,7 @@
   "devDependencies": {
     "@kononia/config": "workspace:*",
     "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0",
     "typescript": "^6"
   }
 }
