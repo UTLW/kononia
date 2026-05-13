@@ -21,3 +21,4 @@ catalog:
   "@polar-sh/better-auth": ^1.8.3
   "@types/react-dom": ^19.2.3
   "@better-auth/expo": 1.6.9
+  drizzle-orm: ^0.45.1
