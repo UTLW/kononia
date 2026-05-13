@@ -4,6 +4,9 @@ import { drizzle } from "drizzle-orm/libsql";
 
 import * as schema from "./schema";
 
+export { schema };
+export type Schema = typeof schema;
+
 export function createDb() {
   const client = createClient({
     url: env.DATABASE_URL,
