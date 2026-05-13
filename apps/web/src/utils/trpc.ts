@@ -1,5 +1,5 @@
 import type { AppRouter } from "@kononia/api/routers/index";
-import { createTRPCReact } from "@trpc/react-query";
+import { createTRPCReact } from "@trpc/tanstack-react-query";
 import { httpBatchLink } from "@trpc/client";
 import { QueryClient } from "@tanstack/react-query";
 
