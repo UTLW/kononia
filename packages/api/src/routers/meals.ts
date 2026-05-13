@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
-import { meals, mealIngredients, mealSteps, mealTags, snacks } from "@kononia/db/schema";
+import { meals, mealIngredients, mealSteps, mealTags, snacks } from "@kononia/db";
 import { eq, like, and, desc } from "drizzle-orm";
 
 export const mealsRouter = router({

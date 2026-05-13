@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
-import { seasons } from "@kononia/db/schema";
+import { seasons } from "@kononia/db";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
 export const seasonsRouter = router({

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
-import { seasons, fastDays } from "@kononia/db/schema";
+import { seasons, fastDays } from "@kononia/db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 
 export const calendarRouter = router({

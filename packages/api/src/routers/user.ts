@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../index";
-import { user } from "@kononia/db/schema/auth";
+import { user } from "@kononia/db";
 import { eq } from "drizzle-orm";
 
 export const userRouter = router({
