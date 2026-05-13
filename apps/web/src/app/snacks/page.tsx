@@ -1,10 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 
 export default function SnacksPage() {
-  const trpc = useTRPC();
   const { data: snacks } = useQuery(trpc.meals.getSnacks.queryOptions({}));
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Calendar } from "@kononia/ui/components/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
@@ -21,7 +21,6 @@ const FASTING_TYPE_STYLES: Record<string, { bg: string; label: string }> = {
 };
 
 export default function CalendarPage() {
-  const trpc = useTRPC();
   const { data: session } = authClient.useSession();
   
   const [currentDate, setCurrentDate] = useState(new Date());

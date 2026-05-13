@@ -5,7 +5,7 @@ import { Toaster } from "@kononia/ui/components/sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { getQueryClient, TRPCProvider, trpcClient } from "@/utils/trpc";
+import { getQueryClient } from "@/utils/trpc";
 
 const ThemeProvider = dynamic(
   () => import("./theme-provider").then((mod) => mod.ThemeProvider),
@@ -18,10 +18,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <TRPCProvider client={trpcClient} queryClient={queryClient}>
-          {children}
-          <ReactQueryDevtools />
-        </TRPCProvider>
+        {children}
+        <ReactQueryDevtools />
       </QueryClientProvider>
       <Toaster richColors />
     </ThemeProvider>

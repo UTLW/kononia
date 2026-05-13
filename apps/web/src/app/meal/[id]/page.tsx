@@ -2,10 +2,9 @@
 
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const trpc = useTRPC();
   const { id } = use(params);
   const { data: meal, isLoading } = useQuery(trpc.meals.get.queryOptions({ id }));
 

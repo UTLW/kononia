@@ -2,7 +2,7 @@ import type { AppRouter } from "@kononia/api/routers/index";
 import { env } from "@kononia/env/web";
 import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 export function makeQueryClient() {
   return new QueryClient({
@@ -25,8 +25,6 @@ export function getQueryClient() {
   }
 }
 
-export const queryClient = getQueryClient();
-
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
@@ -41,9 +39,11 @@ const trpcClient = createTRPCClient<AppRouter>({
   ],
 });
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>({
+const queryClient = getQueryClient();
+
+export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: trpcClient,
   queryClient,
 });
 
-export { trpcClient };
+export { queryClient };

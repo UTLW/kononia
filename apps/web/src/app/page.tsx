@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 
@@ -19,7 +19,6 @@ const FASTING_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function HomePage() {
-  const trpc = useTRPC();
   const { data: session, isLoading: sessionLoading } = authClient.useSession();
   const hasSynced = useRef(false);
   
