@@ -7,6 +7,10 @@ import { Pressable, Text } from "react-native";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 
+const COLORS = {
+  primary: "#722F37",
+};
+
 function DrawerLayout() {
   const themeColorForeground = useThemeColor("foreground");
   const themeColorBackground = useThemeColor("background");
@@ -16,50 +20,52 @@ function DrawerLayout() {
   return (
     <Drawer
       screenOptions={{
-        headerTintColor: themeColorForeground,
+        headerTintColor: COLORS.primary,
         headerStyle: { backgroundColor: themeColorBackground },
         headerTitleStyle: {
           fontWeight: "600",
-          color: themeColorForeground,
+          color: COLORS.primary,
         },
         headerRight: renderThemeToggle,
         drawerStyle: { backgroundColor: themeColorBackground },
+        drawerActiveTintColor: COLORS.primary,
+        drawerInactiveTintColor: themeColorForeground,
       }}
     >
       <Drawer.Screen
-        name="index"
+        name="(tabs)"
         options={{
-          headerTitle: "Home",
-          drawerLabel: ({ color, focused }) => (
-            <Text style={{ color: focused ? color : themeColorForeground }}>Home</Text>
+          headerTitle: "ⲔⲞⲚⲞⲚⲒⲀ",
+          drawerLabel: ({ focused, color }) => (
+            <Text style={{ color: focused ? COLORS.primary : color }}>Home</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
             <Ionicons
               name="home-outline"
               size={size}
-              color={focused ? color : themeColorForeground}
+              color={focused ? COLORS.primary : color}
             />
           ),
         }}
       />
       <Drawer.Screen
-        name="(tabs)"
+        name="index"
         options={{
-          headerTitle: "Tabs",
-          drawerLabel: ({ color, focused }) => (
-            <Text style={{ color: focused ? color : themeColorForeground }}>Tabs</Text>
+          headerTitle: "About",
+          drawerLabel: ({ color }) => (
+            <Text style={{ color }}>About</Text>
           ),
-          drawerIcon: ({ size, color, focused }) => (
-            <MaterialIcons
-              name="border-bottom"
+          drawerIcon: ({ size, color }) => (
+            <Ionicons
+              name="information-circle-outline"
               size={size}
-              color={focused ? color : themeColorForeground}
+              color={color}
             />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable className="mr-4">
-                <Ionicons name="add-outline" size={24} color={themeColorForeground} />
+                <Ionicons name="add-outline" size={24} color={COLORS.primary} />
               </Pressable>
             </Link>
           ),
