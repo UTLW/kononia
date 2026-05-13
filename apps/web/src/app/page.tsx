@@ -1,170 +1,119 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
-
-const FASTING_TYPE_COLORS: Record<string, string> = {
-  strict: "bg-fast-strict",
-  regular: "bg-fast-regular", 
-  feast: "bg-fast-feast",
-};
-
-const FASTING_TYPE_LABELS: Record<string, string> = {
-  strict: "Strict Fast",
-  regular: "Regular Fast",
-  feast: "Feast Day",
-};
+import { Card, CardContent } from "@kononia/ui/components/card";
+import { PublicNav } from "@/components/public-nav";
 
 export default function HomePage() {
-  const { data: session, isLoading: sessionLoading } = authClient.useSession();
-  const hasSynced = useRef(false);
-  
-  const syncMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/sync/coptic`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Sync failed");
-      return res.json();
-    },
-  });
+  const { data: session, isLoading } = authClient.useSession();
 
-  useEffect(() => {
-    if (session && !hasSynced.current) {
-      hasSynced.current = true;
-      syncMutation.mutate();
-    }
-  }, [session]);
-
-  const { data: fastDay } = useQuery(trpc.calendar.getTodayFastDay.queryOptions());
-  const { data: season } = useQuery(trpc.seasons.getCurrent.queryOptions());
-  const { data: meals } = useQuery(trpc.meals.list.queryOptions({ 
-    fastingType: fastDay?.fastingType || "regular",
-    limit: 3 
-  }));
-
-  if (sessionLoading) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto max-w-3xl px-4 py-6 text-center">
-        <p>Loading...</p>
+      <div className="min-h-screen">
+        <PublicNav />
+        <div className="container flex items-center justify-center py-20">
+          <p>Loading...</p>
+        </div>
       </div>
     );
   }
 
-  if (!session) {
-    return (
-      <div className="container mx-auto max-w-3xl px-4 py-6 space-y-6">
-        <section className="rounded-xl p-8 text-center bg-fast-regular text-white">
-          <h1 className="font-serif text-4xl mb-4">ⲔⲞⲚⲞⲚⲒⲀ</h1>
-          <p className="text-lg mb-4">Orthodox Christian Family Fasting Companion</p>
-          <p className="text-white/80 mb-6">
-            Track liturgical fasting days, find recipes, and follow the Coptic Orthodox tradition.
+  // If authenticated, redirect to dashboard
+  if (session) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/dashboard";
+    }
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen">
+      <PublicNav />
+      
+      <main className="container">
+        {/* Hero */}
+        <section className="py-20 text-center">
+          <h1 className="font-serif text-5xl mb-4 text-foreground">ⲔⲞⲚⲞⲚⲒⲀ</h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Orthodox Christian Family Fasting Companion
+          </p>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            Track liturgical fasting days, find recipes for fasting periods, 
+            and follow the Coptic Orthodox tradition of fasting.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button size="lg" asChild>
+              <Link href="/">Get Started</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/about">Learn More</Link>
+            </Button>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="py-16">
+          <h2 className="font-serif text-2xl text-center mb-10">Features</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <div className="text-4xl mb-4">📅</div>
+                <h3 className="font-medium mb-2">Fasting Calendar</h3>
+                <p className="text-sm text-muted-foreground">
+                  Track liturgical seasons and fasting days with Coptic calendar integration
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <div className="text-4xl mb-4">🍽️</div>
+                <h3 className="font-medium mb-2">Fasting Recipes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Browse Orthodox fasting-friendly meals and snacks for every fasting type
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <div className="text-4xl mb-4">📱</div>
+                <h3 className="font-medium mb-2">Available Everywhere</h3>
+                <p className="text-sm text-muted-foreground">
+                  Access on web and mobile - your fasting data syncs across all devices
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 text-center bg-fast-regular text-white rounded-xl mb-10">
+          <h2 className="font-serif text-2xl mb-4">Start Your Fasting Journey</h2>
+          <p className="text-white/80 mb-6 max-w-xl mx-auto">
+            Join families around the world who use ⲔⲞⲚⲞⲚⲒⲀ to follow the 
+            Coptic Orthodox fasting tradition.
           </p>
           <Button 
             size="lg" 
-            onClick={() => authClient.signIn.email()}
             className="bg-white text-primary hover:bg-white/90"
+            asChild
           >
-            Sign In to Continue
+            <Link href="/">Sign Up Free</Link>
           </Button>
         </section>
+      </main>
 
-        <section className="rounded-lg border bg-card p-6">
-          <h2 className="font-serif text-xl mb-4 text-card-foreground">Features</h2>
-          <ul className="space-y-2 text-muted-foreground">
-            <li>📅 Fasting calendar with Coptic seasons</li>
-            <li>🍽️ Orthodox fasting recipes and meal ideas</li>
-            <li>🥗 Snack guide for fasting days</li>
-            <li>📱 Available on web and mobile</li>
-          </ul>
-        </section>
-      </div>
-    );
-  }
-
-  const fastingType = fastDay?.fastingType || "regular";
-  const colorClass = FASTING_TYPE_COLORS[fastingType] || "bg-fast-regular";
-
-  return (
-    <div className="container mx-auto max-w-3xl px-4 py-6 space-y-6">
-      <section className={`rounded-xl p-6 text-white ${colorClass}`}>
-        <div className="text-center">
-          <h1 className="font-serif text-3xl mb-2">
-            {FASTING_TYPE_LABELS[fastingType as keyof typeof FASTING_TYPE_LABELS]}
-          </h1>
-          <p className="text-white/90">
-            {fastDay?.fastNotes || "Today is a day of fasting"}
-          </p>
-        </div>
-      </section>
-
-      {season && (
-        <section className="rounded-lg border bg-card p-4">
-          <h2 className="font-serif text-xl mb-2 text-card-foreground">Current Season</h2>
-          <div className="space-y-1">
-            <p className="font-medium">{season.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {season.startDate} - {season.endDate}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {season.copticMonth && `Coptic: ${season.copticMonth}`}
-            </p>
+      {/* Footer */}
+      <footer className="border-t py-8 mt-10">
+        <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>© 2026 ⲔⲞⲚⲞⲚⲒⲀ. Following the Coptic Orthodox tradition.</p>
+          <div className="flex gap-4">
+            <Link href="/about" className="hover:text-foreground">About</Link>
+            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
           </div>
-        </section>
-      )}
-
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="font-serif text-xl mb-4 text-card-foreground">Today's Meals</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {meals?.map((meal) => (
-            <div key={meal.id} className="rounded-lg border bg-card overflow-hidden">
-              {meal.imageUrl && (
-                <img 
-                  src={meal.imageUrl} 
-                  alt={meal.name}
-                  className="w-full h-32 object-cover"
-                />
-              )}
-              <div className="p-3">
-                <h3 className="font-medium text-card-foreground">{meal.name}</h3>
-                <p className="text-xs text-muted-foreground">{meal.cuisineTag}</p>
-                {meal.prepTime && meal.cookTime && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {meal.prepTime + meal.cookTime} min
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-          {(!meals || meals.length === 0) && (
-            <p className="text-muted-foreground col-span-full text-center py-4">
-              No meals found for today&apos;s fasting type
-            </p>
-          )}
         </div>
-      </section>
-
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="font-serif text-xl mb-2 text-card-foreground">Quick Links</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <a href="/calendar" className="rounded-md bg-secondary p-3 text-center text-secondary-foreground hover:bg-secondary/80">
-            View Calendar
-          </a>
-          <a href="/meals" className="rounded-md bg-secondary p-3 text-center text-secondary-foreground hover:bg-secondary/80">
-            Browse Meals
-          </a>
-          <a href="/snacks" className="rounded-md bg-secondary p-3 text-center text-secondary-foreground hover:bg-secondary/80">
-            Snack Guide
-          </a>
-          <a href="/settings" className="rounded-md bg-secondary p-3 text-center text-secondary-foreground hover:bg-secondary/80">
-            Settings
-          </a>
-        </div>
-      </section>
+      </footer>
     </div>
   );
 }

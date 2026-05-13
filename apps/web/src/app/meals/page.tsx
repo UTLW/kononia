@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
 import { Input } from "@kononia/ui/components/input";

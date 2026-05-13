@@ -1,12 +1,11 @@
 "use client";
 
 import { use } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: meal, isLoading } = useQuery(trpc.meals.get.queryOptions({ id }));
+  const { data: meal, isLoading } = trpc.meals.get.useQuery({ id });
 
   if (isLoading) {
     return <div className="container mx-auto px-4 py-6">Loading...</div>;

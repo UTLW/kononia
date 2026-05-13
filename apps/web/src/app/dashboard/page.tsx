@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
@@ -9,9 +8,9 @@ import { Button } from "@kononia/ui/components/button";
 
 export default function DashboardPage() {
   const { data: session } = authClient.useSession();
-  const { data: fastDay } = useQuery(trpc.calendar.getTodayFastDay.queryOptions());
-  const { data: season } = useQuery(trpc.seasons.getCurrent.queryOptions());
-  const { data: meals } = useQuery(trpc.meals.list.queryOptions({ limit: 3 }));
+  const { data: fastDay } = trpc.calendar.getTodayFastDay.useQuery();
+  const { data: season } = trpc.seasons.getCurrent.useQuery();
+  const { data: meals } = trpc.meals.list.useQuery({ limit: 3 });
 
   if (!session) {
     return (

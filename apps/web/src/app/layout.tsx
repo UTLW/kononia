@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Lora, DM_Sans, Cormorant_Garamond } from "next/font/google";
+import { headers } from "next/headers";
 
 import "../index.css";
-import Header from "@/components/header";
 import Providers from "@/components/providers";
+import { AppSidebar } from "@/components/app-sidebar";
+import { authClient } from "@/lib/auth-client";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -42,19 +44,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await authClient.api.getSession();
+  const isAuthenticated = !!session?.user;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${lora.variable} ${dmSans.variable} ${cormorant.variable} antialiased`}>
         <Providers>
-          <div className="grid grid-rows-[auto_1fr] h-svh">
-            <Header />
-            {children}
-          </div>
+          {isAuthenticated ? (
+            <div className="flex h-screen">
+              <AppSidebar />
+              <main className="flex-1 overflow-auto">{children}</main>
+            </div>
+          ) : (
+            <div className="min-h-screen">{children}</div>
+          )}
         </Providers>
       </body>
     </html>

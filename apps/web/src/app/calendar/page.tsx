@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Calendar } from "@kononia/ui/components/calendar";
@@ -32,17 +31,13 @@ export default function CalendarPage() {
   const startDate = new Date(year, month, 1).toISOString().split("T")[0];
   const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
   
-  const { data: fastDays } = useQuery(
-    trpc.calendar.getFastDaysInRange.queryOptions({ startDate, endDate })
-  );
+  const { data: fastDays } = trpc.calendar.getFastDaysInRange.useQuery({ startDate, endDate });
 
-  const { data: selectedDayData } = useQuery(
-    selectedDate 
-      ? trpc.calendar.getFastDay.queryOptions({ date: selectedDate.toISOString().split("T")[0] })
-      : null
-  );
+  const { data: selectedDayData } = selectedDate 
+    ? trpc.calendar.getFastDay.useQuery({ date: selectedDate.toISOString().split("T")[0] })
+    : { data: null };
 
-  const { data: currentSeason } = useQuery(trpc.seasons.getCurrent.queryOptions());
+  const { data: currentSeason } = trpc.seasons.getCurrent.useQuery();
 
   const getFastingTypeForDate = (date: Date) => {
     if (!fastDays) return null;

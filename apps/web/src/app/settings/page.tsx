@@ -9,7 +9,7 @@ import { Label } from "@kononia/ui/components/label";
 
 export default function SettingsPage() {
   const { data: session } = authClient.useSession();
-  const { data: user } = useQuery(trpc.user.getProfile.queryOptions(), {
+  const { data: user } = trpc.user.getProfile.useQuery(undefined, {
     enabled: !!session,
   });
 
