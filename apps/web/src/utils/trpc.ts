@@ -1,7 +1,7 @@
 import type { AppRouter } from "@kononia/api/routers/index";
 import { env } from "@kononia/env/web";
 import { QueryClient } from "@tanstack/react-query";
-import { createTRPCReact } from "@trpc/react-query";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { httpBatchLink } from "@trpc/client";
 
 export function makeQueryClient() {
@@ -25,22 +25,25 @@ export function getQueryClient() {
   }
 }
 
+const trpcClient = {
+  query: async (path: string, input?: unknown) => {
+    const url = `${env.NEXT_PUBLIC_SERVER_URL}/trpc/${path}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error(`TRPC error: ${response.statusText}`);
+    const json = await response.json();
+    return json.result?.data;
+  },
+};
+
 const queryClient = getQueryClient();
 
-export const trpc = createTRPCReact<AppRouter>({
-  config: () => ({
-    links: [
-      httpBatchLink({
-        url: `${env.NEXT_PUBLIC_SERVER_URL}/trpc`,
-        fetch(url, options) {
-          return fetch(url, {
-            ...options,
-            credentials: "include",
-          });
-        },
-      }),
-    ],
-  }),
+export const trpc = createTRPCOptionsProxy<AppRouter>({
+  client: trpcClient as any,
   queryClient,
 });
 
