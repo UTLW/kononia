@@ -1,17 +1,24 @@
 "use client";
 import Link from "next/link";
-
+import { authClient } from "@/lib/auth-client";
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 
 export default function Header() {
-  const links = [
+  const { data: session } = authClient.useSession();
+  
+  const publicLinks = [
     { to: "/", label: "ⲔⲞⲚⲞⲚⲒⲀ" },
+  ] as const;
+
+  const authLinks = [
     { to: "/calendar", label: "Calendar" },
     { to: "/meals", label: "Meals" },
     { to: "/snacks", label: "Snacks" },
     { to: "/settings", label: "Settings" },
   ] as const;
+
+  const links = session ? authLinks : publicLinks;
 
   return (
     <div>
