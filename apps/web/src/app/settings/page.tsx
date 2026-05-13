@@ -26,8 +26,8 @@ export default function SettingsPage() {
   });
 
   const handleUpgrade = async () => {
-    if (!session.data) {
-      signIn();
+    if (!session) {
+      authClient.signIn.email();
       return;
     }
     try {
@@ -105,8 +105,34 @@ export default function SettingsPage() {
               <p className="mt-3 text-primary font-medium">You are subscribed!</p>
             ) : (
               <Button className="mt-3" onClick={handleUpgrade}>
-                {session.data ? "Upgrade to Annual" : "Sign in to Upgrade"}
+                {session ? "Upgrade to Annual" : "Sign in to Upgrade"}
               </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Data</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              Sync liturgical calendar data from Coptic.io API
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+            >
+              {syncMutation.isPending ? "Syncing..." : "Sync Coptic Data"}
+            </Button>
+            {syncMutation.isSuccess && (
+              <p className="text-sm text-green-600">Sync completed!</p>
+            )}
+            {syncMutation.isError && (
+              <p className="text-sm text-red-600">Sync failed. Try again.</p>
             )}
           </div>
         </CardContent>

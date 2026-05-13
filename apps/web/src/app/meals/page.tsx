@@ -39,11 +39,11 @@ export default function MealsPage() {
   const [fastingType, setFastingType] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const { data: allMeals } = useQuery(trpc.meals.list.queryOptions({
-    cuisine: cuisine || undefined,
-    fastingType: fastingType || undefined,
-    limit: 50,
-  }));
+  const { data: allMeals, isLoading } = useQuery(
+    trpc.meals.list.queryOptions({
+      limit: 50,
+    })
+  );
 
   const { data: searchResults } = useQuery(
     trpc.meals.search.queryOptions(
@@ -52,7 +52,7 @@ export default function MealsPage() {
     )
   );
 
-  const meals = search.length >= 2 ? searchResults : allMeals;
+  const meals = search.length >= 2 ? (searchResults || []) : (allMeals || []);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-6">
