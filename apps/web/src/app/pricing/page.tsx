@@ -24,7 +24,7 @@ export default function PricingPage() {
     <div className="min-h-screen">
       <PublicNav />
       
-      <main className="container py-12">
+      <main className="container mx-auto py-12 px-4">
         <h1 className="font-serif text-3xl text-center mb-4">Simple, Transparent Pricing</h1>
         <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
           Choose the plan that works best for your family. All plans include access to our core fasting features.

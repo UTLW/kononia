@@ -18,6 +18,7 @@ export const user = sqliteTable("user", {
   subscribedAt: integer("subscribed_at", { mode: "timestamp_ms" }),
   timezone: text("timezone").default("America/New_York"),
   displayName: text("display_name"),
+  pantry: text("pantry").$type<string[]>(),
 });
 
 export const session = sqliteTable(

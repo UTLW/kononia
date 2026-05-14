@@ -1,23 +1,52 @@
 "use client";
 
 import { use } from "react";
-import { useTRPC } from "@/utils/trpc";
+import Link from "next/link";
+import { trpc } from "@/utils/trpc";
+import { Button } from "@kononia/ui/components/button";
+import { Badge } from "@kononia/ui/components/badge";
+import { Checkbox } from "@kononia/ui/components/checkbox";
+import { CardLoader, Spinner } from "@/components/spinner";
+import { ArrowLeft } from "lucide-react";
+
+const FASTING_TYPE_LABELS: Record<string, string> = {
+  strict: "Strict Fast",
+  regular: "Regular Fast",
+  both: "All Types",
+};
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const trpc = useTRPC();
   const { id } = use(params);
   const { data: meal, isLoading } = trpc.meals.get.useQuery({ id });
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-6">Loading...</div>;
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <CardLoader />
+      </div>
+    );
   }
 
   if (!meal) {
-    return <div className="container mx-auto px-4 py-6">Meal not found</div>;
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        <p className="text-muted-foreground mb-4">Meal not found</p>
+        <Link href="/meals">
+          <Button variant="outline">Back to Meals</Button>
+        </Link>
+      </div>
+    );
   }
+
+  const fastingLabel = FASTING_TYPE_LABELS[meal.fastingType] || meal.fastingType;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6">
+      <Link href="/meals" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-4 w-4" />
+        Back to Meals
+      </Link>
+
       {meal.imageUrl && (
         <img 
           src={meal.imageUrl} 
@@ -28,13 +57,13 @@ export default function MealDetailPage({ params }: { params: Promise<{ id: strin
 
       <div className="flex items-center gap-3 mb-4">
         <h1 className="font-serif text-3xl text-foreground">{meal.name}</h1>
-        <span className={`text-sm px-2 py-1 rounded ${
-          meal.fastingType === "strict" ? "bg-fast-strict text-white" :
-          meal.fastingType === "regular" ? "bg-fast-regular text-white" :
-          "bg-fast-feast text-foreground"
+        <Badge className={`text-sm ${
+          meal.fastingType === "strict" ? "bg-[#722F37] text-white" :
+          meal.fastingType === "regular" ? "bg-[#C9A96E] text-white" :
+          "bg-[#4A7C59] text-white"
         }`}>
-          {meal.fastingType}
-        </span>
+          {fastingLabel}
+        </Badge>
       </div>
 
       <p className="text-muted-foreground mb-4">{meal.cuisineTag}</p>
@@ -54,8 +83,10 @@ export default function MealDetailPage({ params }: { params: Promise<{ id: strin
         <ul className="space-y-2">
           {meal.ingredients?.map((ing, i) => (
             <li key={i} className="flex items-center gap-2">
-              <input type="checkbox" className="rounded border-gray-300" />
-              <span className="text-foreground">{ing.ingredient}</span>
+              <Checkbox id={`ing-${i}`} />
+              <label htmlFor={`ing-${i}`} className="text-foreground cursor-pointer">
+                {ing.ingredient}
+              </label>
             </li>
           ))}
         </ul>

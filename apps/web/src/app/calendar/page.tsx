@@ -1,83 +1,140 @@
 "use client";
 
-import { useState } from "react";
-import { useTRPC } from "@/utils/trpc";
+import { useState, useMemo } from "react";
+import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Calendar } from "@kononia/ui/components/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
+import { Spinner } from "@/components/spinner";
+import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+const FASTING_TYPE_CONFIG: Record<string, { bg: string; label: string; textClass: string; borderColor: string }> = {
+  strict: { 
+    bg: "bg-[#722F37]", 
+    label: "Strict Fast", 
+    textClass: "text-white",
+    borderColor: "border-[#722F37]"
+  },
+  regular: { 
+    bg: "bg-[#C9A96E]", 
+    label: "Regular Fast", 
+    textClass: "text-white",
+    borderColor: "border-[#C9A96E]"
+  },
+  feast: { 
+    bg: "bg-[#4A7C59]", 
+    label: "Feast Day", 
+    textClass: "text-white",
+    borderColor: "border-[#4A7C59]"
+  },
+};
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
-const FASTING_TYPE_STYLES: Record<string, { bg: string; label: string }> = {
-  strict: { bg: "bg-fast-strict", label: "Strict Fast" },
-  regular: { bg: "bg-fast-regular", label: "Regular Fast" },
-  feast: { bg: "bg-fast-feast", label: "Feast Day" },
-};
+const MEAL_TYPES = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+  { value: "snack", label: "Snack" },
+];
 
 export default function CalendarPage() {
-  const trpc = useTRPC();
   const { data: session } = authClient.useSession();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showMealPicker, setShowMealPicker] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState<string>("lunch");
   
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
   
   const startDate = new Date(year, month, 1).toISOString().split("T")[0];
   const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
   
-  const { data: fastDays } = trpc.calendar.getFastDaysInRange.useQuery({ startDate, endDate });
+  const { data: fastDays, isLoading: fastDaysLoading } = trpc.calendar.getFastDaysInRange.useQuery({ 
+    startDate, 
+    endDate 
+  });
 
-  const { data: selectedDayData } = trpc.calendar.getFastDay.useQuery(
-    { date: selectedDate?.toISOString().split("T")[0] || "" },
+  const { data: selectedDayData, isLoading: selectedDayLoading } = trpc.calendar.getFastDay.useQuery(
+    { date: selectedDate.toISOString().split("T")[0] },
     { enabled: !!selectedDate }
   );
 
   const { data: currentSeason } = trpc.seasons.getCurrent.useQuery();
 
-  const getFastingTypeForDate = (date: Date) => {
-    if (!fastDays) return null;
+  const { data: dayMealPlans } = trpc.mealPlan.getByDate.useQuery(
+    { date: selectedDate.toISOString().split("T")[0] },
+    { enabled: !!session }
+  );
+
+  const { data: monthMealPlans } = trpc.mealPlan.getByDateRange.useQuery(
+    { startDate, endDate },
+    { enabled: !!session }
+  );
+
+  const { data: fastingTypeMeals } = trpc.meals.getByFastingType.useQuery({
+    fastingType: selectedDayData?.fastingType === "feast" ? "both" : selectedDayData?.fastingType || "regular",
+    limit: 20,
+  });
+
+  const createMealPlan = trpc.mealPlan.create.useMutation({
+    onSuccess: () => {
+      setShowMealPicker(false);
+    },
+  });
+
+  const deleteMealPlan = trpc.mealPlan.delete.useMutation();
+
+  const fastingDaysMap = useMemo(() => {
+    const map = new Map<string, { fastingType: string; fastNotes: string | null }>();
+    (fastDays || []).forEach(day => {
+      map.set(day.date, { fastingType: day.fastingType, fastNotes: day.fastNotes });
+    });
+    return map;
+  }, [fastDays]);
+
+  const mealPlansMap = useMemo(() => {
+    const map = new Map<string, number>();
+    (monthMealPlans || []).forEach(plan => {
+      const count = map.get(plan.date) || 0;
+      map.set(plan.date, count + 1);
+    });
+    return map;
+  }, [monthMealPlans]);
+
+  const getFastingType = (date: Date): string | null => {
     const dateStr = date.toISOString().split("T")[0];
-    const day = fastDays.find(d => d.date === dateStr);
-    return day?.fastingType || null;
+    return fastingDaysMap.get(dateStr)?.fastingType || null;
   };
 
-  const handlePreviousMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  const modifiers = {
-    fasting: (date: Date) => {
-      const fastingType = getFastingTypeForDate(date);
-      return fastingType !== null;
-    },
-    strictFast: (date: Date) => getFastingTypeForDate(date) === "strict",
-    regularFast: (date: Date) => getFastingTypeForDate(date) === "regular",
-    feast: (date: Date) => getFastingTypeForDate(date) === "feast",
+  const handleMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth);
   };
 
-  const modifiersStyles = {
-    fasting: { 
-      backgroundColor: "#FDF8F3",
-      border: "2px solid #4A7C59",
-    },
-    strictFast: { 
-      backgroundColor: "#722F37", 
-      color: "white",
-    },
-    regularFast: { 
-      backgroundColor: "#C9A96E", 
-    },
-    feast: { 
-      backgroundColor: "#4A7C59", 
-      color: "white",
-    },
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) setSelectedDate(date);
   };
+
+  const handleAddMeal = (mealId: string) => {
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    createMealPlan.mutate({
+      date: dateStr,
+      mealId,
+      mealType: selectedMealType as "breakfast" | "lunch" | "dinner" | "snack",
+    });
+  };
+
+  const today = new Date();
+  const selectedType = selectedDayData?.fastingType;
+  const selectedConfig = selectedType ? FASTING_TYPE_CONFIG[selectedType] : null;
+  const selectedDateStr = selectedDate.toISOString().split("T")[0];
 
   if (!session) {
     return (
@@ -87,14 +144,12 @@ export default function CalendarPage() {
     );
   }
 
-  const selectedFastingType = selectedDayData?.fastingType;
-
   return (
     <div className="container mx-auto max-w-4xl px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl text-foreground">Fasting Calendar</h1>
         {currentSeason && (
-          <Badge variant="outline" className="bg-fast-regular text-white">
+          <Badge className="bg-[#C9A96E] text-white">
             {currentSeason.name}
           </Badge>
         )}
@@ -102,76 +157,181 @@ export default function CalendarPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle>{MONTHS[month]} {year}</CardTitle>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
+          <CardTitle className="text-lg">
+            {MONTHS[month]} {year}
+          </CardTitle>
+          <div className="flex gap-1">
+            <Button 
+              variant="outline" 
+              size="icon-sm"
+              onClick={() => handleMonthChange(new Date(year, month - 1, 1))}
+            >
               ←
             </Button>
-            <Button variant="outline" size="sm" onClick={handleNextMonth}>
+            <Button 
+              variant="outline" 
+              size="icon-sm"
+              onClick={() => handleMonthChange(new Date(year, month + 1, 1))}
+            >
               →
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            month={currentDate}
-            onMonthChange={setCurrentDate}
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
-            className="w-full"
-          />
+          {fastDaysLoading ? (
+            <div className="flex justify-center py-8">
+              <Spinner text="Loading calendar..." />
+            </div>
+          ) : (
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              month={currentMonth}
+              onMonthChange={handleMonthChange}
+              className="w-full"
+              modifiers={{
+                strictFast: (date) => getFastingType(date) === "strict",
+                regularFast: (date) => getFastingType(date) === "regular",
+                feast: (date) => getFastingType(date) === "feast",
+                hasMeals: (date) => {
+                  const dateStr = date.toISOString().split("T")[0];
+                  return (mealPlansMap.get(dateStr) || 0) > 0;
+                },
+              }}
+              modifiersClassNames={{
+                strictFast: "bg-[#722F37] text-white rounded-full",
+                regularFast: "bg-[#C9A96E] text-white rounded-full",
+                feast: "bg-[#4A7C59] text-white rounded-full",
+                hasMeals: "ring-2 ring-[#722F37] ring-offset-2",
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
-      <div className="flex gap-4 justify-center">
+      <div className="flex gap-4 justify-center flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-fast-strict" />
+          <div className="w-4 h-4 rounded-full bg-[#722F37]" />
           <span className="text-sm">Strict Fast</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-fast-regular" />
+          <div className="w-4 h-4 rounded-full bg-[#C9A96E]" />
           <span className="text-sm">Regular Fast</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-fast-feast border" />
+          <div className="w-4 h-4 rounded-full bg-[#4A7C59]" />
           <span className="text-sm">Feast</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full border-2 border-[#722F37]" />
+          <span className="text-sm">Planned Meals</span>
         </div>
       </div>
 
-      {selectedDate && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {selectedDate.toLocaleDateString("en-US", { 
-                weekday: "long", 
-                year: "numeric", 
-                month: "long", 
-                day: "numeric" 
-              })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedFastingType ? (
-              <div className="space-y-2">
-                <div className={`inline-block px-3 py-1 rounded text-white ${
-                  selectedFastingType === "strict" ? "bg-fast-strict" :
-                  selectedFastingType === "regular" ? "bg-fast-regular" : "bg-fast-feast"
-                }`}>
-                  {FASTING_TYPE_STYLES[selectedFastingType]?.label || selectedFastingType}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">
+            {selectedDate.toLocaleDateString("en-US", { 
+              weekday: "long", 
+              year: "numeric", 
+              month: "long", 
+              day: "numeric" 
+            })}
+          </CardTitle>
+          <Button size="sm" onClick={() => setShowMealPicker(!showMealPicker)}>
+            {showMealPicker ? "Close" : "+ Add Meal"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {selectedDayLoading ? (
+            <Spinner text="Loading..." />
+          ) : (
+            <div className="space-y-4">
+              {selectedConfig ? (
+                <div className="flex items-center gap-3">
+                  <div className={`inline-block px-4 py-2 rounded font-medium ${selectedConfig.bg} ${selectedConfig.textClass}`}>
+                    {selectedConfig.label}
+                  </div>
+                  {selectedDayData?.fastNotes && (
+                    <p className="text-muted-foreground">{selectedDayData.fastNotes}</p>
+                  )}
                 </div>
-                {selectedDayData?.fastNotes && (
-                  <p className="text-muted-foreground">{selectedDayData.fastNotes}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No fasting information for this day.</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground font-medium">Regular Fast</p>
+                  <p className="text-sm text-muted-foreground">
+                    No meat, dairy, eggs, olive oil, wine, avocado, nuts, or seeds
+                  </p>
+                </div>
+              )}
+
+              {showMealPicker && (
+                <div className="mt-4 pt-4 border-t space-y-4">
+                  <div className="flex gap-2 flex-wrap">
+                    {MEAL_TYPES.map((type) => (
+                      <Button
+                        key={type.value}
+                        variant={selectedMealType === type.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedMealType(type.value)}
+                        className={selectedMealType === type.value ? "bg-[#722F37]" : ""}
+                      >
+                        {type.label}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    {fastingTypeMeals?.map((meal) => (
+                      <div 
+                        key={meal.id}
+                        className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer"
+                        onClick={() => handleAddMeal(meal.id)}
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{meal.name}</p>
+                          <p className="text-xs text-muted-foreground">{meal.cuisineTag}</p>
+                        </div>
+                        <Button variant="ghost" size="sm">+</Button>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">Loading meals...</p>}
+                  </div>
+                </div>
+              )}
+
+              {dayMealPlans && dayMealPlans.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm font-medium mb-3">Planned Meals</p>
+                  <div className="space-y-2">
+                    {dayMealPlans.map((plan) => (
+                      <div key={plan.id} className="flex items-center justify-between p-2 rounded bg-muted">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="capitalize">{plan.mealType}</Badge>
+                          <Link href={`/meal/${plan.meal.id}`} className="hover:text-[#722F37] text-sm">
+                            {plan.meal.name}
+                          </Link>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => deleteMealPlan.mutate({ id: plan.id })}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {dayMealPlans && dayMealPlans.length === 0 && !showMealPicker && (
+                <p className="text-sm text-muted-foreground mt-4">No meals planned yet. Click "+ Add Meal" to plan your meals.</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

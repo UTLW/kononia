@@ -9,9 +9,74 @@ import express from "express";
 import { db } from "@kononia/db";
 import { user } from "@kononia/db/schema/auth";
 import { seasons, fastDays } from "@kononia/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { polarClient } from "@kononia/auth/lib/payments";
 import { getYearFastingCalendar, getYearSeasons, getTodayCopticDate } from "./lib/coptic-api";
+
+async function syncCopticData() {
+  const year = new Date().getFullYear();
+  console.log(`Syncing Coptic data for ${year}...`);
+  
+  try {
+    const fastingDays = await getYearFastingCalendar(year);
+    const seasonsData = await getYearSeasons(year);
+
+    for (const day of fastingDays) {
+      await db.insert(fastDays).values({
+        id: day.date,
+        date: day.date,
+        fastingType: day.fastingType,
+        fastNotes: day.name || null,
+      }).onConflictDoUpdate({
+        target: fastDays.date,
+        set: {
+          fastingType: day.fastingType,
+          fastNotes: day.name || null,
+        },
+      });
+    }
+
+    for (const season of seasonsData) {
+      await db.insert(seasons).values({
+        id: season.id,
+        name: season.name,
+        description: season.description || season.name,
+        startDate: season.startDate,
+        endDate: season.endDate,
+        fastingType: season.fastingType,
+        strictRules: null,
+        regularRules: null,
+        year,
+        copticMonth: season.copticMonth || null,
+        copticStartDay: null,
+      }).onConflictDoUpdate({
+        target: seasons.id,
+        set: {
+          name: season.name,
+          description: season.description || season.name,
+          startDate: season.startDate,
+          endDate: season.endDate,
+          fastingType: season.fastingType,
+        },
+      });
+    }
+
+    console.log(`Synced ${fastingDays.length} fasting days and ${seasonsData.length} seasons`);
+  } catch (error) {
+    console.error("Auto-sync failed:", error);
+  }
+}
+
+async function checkAndSync() {
+  const today = new Date().toISOString().split("T")[0];
+  const existingDay = await db.select({ count: sql<number>`count(*)` }).from(fastDays).where(eq(fastDays.date, today));
+  
+  if (existingDay[0]?.count === 0) {
+    await syncCopticData();
+  } else {
+    console.log("Coptic data already cached");
+  }
+}
 
 const app = express();
 
@@ -117,10 +182,10 @@ app.post("/api/auth/polar-checkout", async (req, res) => {
     }
 
     const checkout = await polarClient.checkouts.create({
-      productId,
+      productPriceId: productId.startsWith("price_") ? productId : `price_${productId}`,
       customerId: session.user.id,
       successUrl: `${env.CORS_ORIGIN}/settings?success=true`,
-      cancelUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
+      returnUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
     });
 
     res.json({ url: checkout.url });
@@ -140,6 +205,7 @@ app.post("/api/sync/coptic", async (_req, res) => {
 
     for (const day of fastingDays) {
       await db.insert(fastDays).values({
+        id: day.date,
         date: day.date,
         fastingType: day.fastingType,
         fastNotes: day.name || null,
@@ -186,6 +252,31 @@ app.post("/api/sync/coptic", async (_req, res) => {
   } catch (error) {
     console.error("Sync error:", error);
     res.status(500).json({ error: "Failed to sync Coptic data" });
+  }
+});
+
+app.post("/api/checkout/create", async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const productId = process.env.POLAR_PRODUCT_ID;
+    if (!productId) {
+      return res.status(500).json({ error: "Polar product not configured" });
+    }
+
+    const checkout = await polarClient.checkouts.create({
+      productId,
+      successUrl: `${env.CORS_ORIGIN}/settings?success=true`,
+      returnUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
+    });
+
+    res.json({ url: checkout.url });
+  } catch (error) {
+    console.error("Checkout error:", error);
+    res.status(500).json({ error: "Failed to create checkout" });
   }
 });
 

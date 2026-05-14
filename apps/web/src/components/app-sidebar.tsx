@@ -5,19 +5,27 @@ import { usePathname } from "next/navigation";
 import { cn } from "@kononia/ui/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "@kononia/ui/components/sidebar";
+import { Logo } from "@/components/logo";
 import { 
   Home, 
-  Calendar, 
+  CalendarDays, 
   UtensilsCrossed, 
   Salad, 
   Settings, 
   LogOut,
-  BookOpen
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/meals", label: "Meals", icon: UtensilsCrossed },
   { href: "/snacks", label: "Snacks", icon: Salad },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -30,45 +38,49 @@ export function AppSidebar() {
   if (!session) return null;
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-card border-r">
-      <div className="flex h-14 items-center border-b px-4">
-        <Link href="/dashboard" className="font-serif text-xl text-primary">
-          ⲔⲞⲚⲞⲚⲒⲀ
+    <Sidebar collapsible="offcanvas">
+      <SidebarHeader className="py-4">
+        <Link href="/dashboard" className="px-2">
+          <Logo size="md" />
         </Link>
-      </div>
+      </SidebarHeader>
 
-      <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <SidebarContent>
+        <SidebarMenu>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            
+            return (
+              <SidebarMenuItem key={item.href}>
+                <Link 
+                  href={item.href as any} 
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                    isActive 
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
 
-      <div className="border-t p-2">
+      <SidebarFooter>
         <Button
           variant="ghost"
-          className="w-full justify-start text-muted-foreground"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           onClick={() => authClient.signOut()}
         >
-          <LogOut className="mr-3 h-5 w-5" />
+          <LogOut className="h-5 w-5 mr-3" />
           Sign Out
         </Button>
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

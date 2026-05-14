@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import Link from "next/link";
+import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Label } from "@kononia/ui/components/label";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const trpc = useTRPC();
-  const { data: session } = authClient.useSession();
-  const { data: user } = trpc.user.getProfile.useQuery();
+  const { data: session, isPending } = authClient.useSession();
+  const { data: user } = trpc.user.getProfile.useQuery(undefined, {
+    enabled: !!session,
+  });
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   const syncMutation = useMutation({
     mutationFn: async () => {
@@ -18,28 +23,49 @@ export default function SettingsPage() {
         method: "POST",
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Sync failed");
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Sync failed: ${res.status}`);
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Synced ${data.fastingDaysCount} fasting days and ${data.seasonsCount} seasons`);
+    },
+    onError: (error) => {
+      console.error("Sync error:", error);
+      toast.error(error.message || "Sync failed. Check server logs for details.");
     },
   });
 
   const handleUpgrade = async () => {
     if (!session) {
-      authClient.signIn.email();
+      window.location.href = "/signin";
       return;
     }
+    setIsUpgrading(true);
     try {
-      const result = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/polar-checkout`, {
+      const result = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/checkout/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
       const data = await result.json();
+      console.log("Checkout response:", result.status, data);
+      if (!result.ok) {
+        toast.error(data.error || `Error: ${result.status}`);
+        return;
+      }
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        toast.error("No checkout URL returned");
       }
     } catch (error) {
       console.error("Failed to create checkout:", error);
+      toast.error("Failed to create checkout. Please try again.");
+    } finally {
+      setIsUpgrading(false);
     }
   };
 
@@ -52,15 +78,17 @@ export default function SettingsPage() {
           <CardTitle>Account</CardTitle>
         </CardHeader>
         <CardContent>
-          {session.data ? (
+          {isPending ? (
+            <div className="text-center py-4 text-muted-foreground">Loading...</div>
+          ) : session ? (
             <div className="space-y-3">
               <div>
                 <Label>Email</Label>
-                <p className="text-foreground">{user?.email || session.data.user.email}</p>
+                <p className="text-foreground">{user?.email || session.user.email}</p>
               </div>
               <div>
                 <Label>Display Name</Label>
-                <p className="text-foreground">{user?.displayName || user?.name || session.data.user.name}</p>
+                <p className="text-foreground">{user?.displayName || user?.name || session.user.name}</p>
               </div>
               <div>
                 <Label>Timezone</Label>
@@ -74,7 +102,9 @@ export default function SettingsPage() {
           ) : (
             <div className="text-center py-4">
               <p className="text-muted-foreground mb-4">Not logged in</p>
-              <Button onClick={() => signIn()}>Sign In</Button>
+              <Link href="/signin">
+                <Button>Sign In</Button>
+              </Link>
             </div>
           )}
         </CardContent>
@@ -102,8 +132,12 @@ export default function SettingsPage() {
             {user?.plan === "annual" ? (
               <p className="mt-3 text-primary font-medium">You are subscribed!</p>
             ) : (
-              <Button className="mt-3" onClick={handleUpgrade}>
-                {session ? "Upgrade to Annual" : "Sign in to Upgrade"}
+              <Button 
+                className="mt-3" 
+                onClick={handleUpgrade}
+                disabled={isUpgrading}
+              >
+                {isUpgrading ? "Creating Checkout..." : session ? "Upgrade to Annual" : "Sign in to Upgrade"}
               </Button>
             )}
           </div>
@@ -126,11 +160,10 @@ export default function SettingsPage() {
             >
               {syncMutation.isPending ? "Syncing..." : "Sync Coptic Data"}
             </Button>
-            {syncMutation.isSuccess && (
-              <p className="text-sm text-green-600">Sync completed!</p>
-            )}
             {syncMutation.isError && (
-              <p className="text-sm text-red-600">Sync failed. Try again.</p>
+              <p className="text-xs text-red-500">
+                Last sync failed. The API may be unavailable.
+              </p>
             )}
           </div>
         </CardContent>

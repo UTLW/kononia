@@ -1,110 +1,217 @@
 "use client";
 
-import { useTRPC } from "@/utils/trpc";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
-import { Button } from "@kononia/ui/components/button";
+import { Badge } from "@kononia/ui/components/badge";
+
+const fastingColors: Record<string, string> = {
+  strict: "from-[#5a252d] to-[#722F37]",
+  regular: "from-[#a8894f] to-[#C9A96E]",
+  feast: "from-[#3d6b4a] to-[#4A7C59]",
+};
+
+const fastingBgColors: Record<string, string> = {
+  strict: "bg-[#722F37]",
+  regular: "bg-[#C9A96E]",
+  feast: "bg-[#4A7C59]",
+};
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function getGreetingEmoji(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "🌅";
+  if (hour < 18) return "☀️";
+  return "🌙";
+}
 
 export default function DashboardPage() {
-  const trpc = useTRPC();
-  const { data: session } = authClient.useSession();
-  const { data: fastDay } = trpc.calendar.getTodayFastDay.useQuery();
-  const { data: season } = trpc.seasons.getCurrent.useQuery();
-  const { data: meals } = trpc.meals.list.useQuery({ limit: 3 });
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
 
-  if (!session) {
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/signin");
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
     return (
       <div className="container mx-auto max-w-3xl px-4 py-6 text-center">
-        <p>Please sign in to view your dashboard.</p>
+        <p>Loading...</p>
       </div>
     );
   }
 
+  if (!session) {
+    return null;
+  }
+
+  const { data: fastDay } = trpc.calendar.getTodayFastDay.useQuery();
+  const { data: season } = trpc.seasons.getCurrent.useQuery();
+  const { data: upcomingFasts } = trpc.calendar.getUpcomingFastDays.useQuery({ days: 7 });
+  const { data: monthFasts } = trpc.calendar.getFastDaysInRange.useQuery({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
+  });
+  
   const fastingType = fastDay?.fastingType || "regular";
+  const { data: mealsData } = trpc.meals.getByFastingType.useQuery({ 
+    fastingType: fastingType === "feast" ? "both" : fastingType,
+    limit: 4,
+  });
+  const meals = mealsData || [];
+
+  const fastDaysThisMonth = monthFasts?.filter(f => f.fastingType !== "feast").length || 0;
+  const name = session.user?.name || session.user?.email?.split("@")[0] || "Friend";
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-2xl text-foreground">Welcome back!</h1>
-        <Button variant="outline" asChild>
-          <Link href="/settings">Settings</Link>
-        </Button>
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground mb-1">{getGreeting()} {getGreetingEmoji()}</p>
+        <h1 className="font-serif text-3xl text-foreground">{name}</h1>
+        <p className="text-sm text-muted-foreground mt-1">May this day bring you closer to God</p>
       </div>
 
-      <Card className={fastingType === "strict" ? "bg-fast-strict text-white" : fastingType === "regular" ? "bg-fast-regular text-white" : "bg-fast-feast"}>
-        <CardContent className="py-6">
-          <div className="text-center">
-            <h2 className="font-serif text-3xl mb-2">
-              {fastingType === "strict" ? "Strict Fast" : fastingType === "regular" ? "Regular Fast" : "Feast Day"}
-            </h2>
-            <p className="text-white/90">{fastDay?.fastNotes || "Today is a day of fasting"}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
+          <Card className={`bg-gradient-to-br ${fastingColors[fastingType]} text-white overflow-hidden`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm">Today&apos;s Fasting</p>
+                  <h2 className="font-serif text-2xl mt-1">
+                    {fastingType === "strict" ? "Strict Fast" : fastingType === "regular" ? "Regular Fast" : "Feast Day"}
+                  </h2>
+                  <p className="text-white/80 text-sm mt-2">{fastDay?.fastNotes || "A day of prayer and fasting"}</p>
+                </div>
+                <div className="text-6xl opacity-50">
+                  {fastingType === "strict" ? "⛪" : fastingType === "regular" ? "🕯️" : "🎉"}
+                </div>
+              </div>
+              {fastingType === "strict" && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <p className="text-xs text-white/70">No meat, dairy, eggs, oil, wine, nuts, or seeds</p>
+                </div>
+              )}
+              {fastingType === "regular" && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <p className="text-xs text-white/70">No meat, dairy, eggs, olive oil, wine, avocado, nuts, seeds</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {season && (
+        <div className="space-y-4">
+          <Card className="bg-card">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-serif text-[#722F37]">{fastDaysThisMonth}</p>
+              <p className="text-xs text-muted-foreground">Fasting days this month</p>
+            </CardContent>
+          </Card>
+          
+          {season && (
+            <Card className="bg-card">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">Current Season</p>
+                <p className="font-medium text-foreground">{season.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{season.startDate} - {season.endDate}</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {upcomingFasts && upcomingFasts.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Current Season</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Upcoming Fast Days</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-medium">{season.name}</p>
-            <p className="text-sm text-muted-foreground">{season.startDate} - {season.endDate}</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {upcomingFasts.filter(f => f.fastingType !== "feast").slice(0, 5).map((fast) => (
+                <div key={fast.id} className="flex-shrink-0 text-center px-4 py-3 rounded-lg bg-muted min-w-[80px]">
+                  <p className="text-xs text-muted-foreground">{new Date(fast.date).toLocaleDateString("en-US", { weekday: "short" })}</p>
+                  <p className="text-lg font-medium">{new Date(fast.date).getDate()}</p>
+                  <Badge 
+                    className="mt-1 text-[10px]"
+                    style={{ backgroundColor: fast.fastingType === "strict" ? "#722F37" : "#C9A96E" }}
+                  >
+                    {fast.fastingType === "strict" ? "Strict" : "Regular"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="py-4 text-center">
-            <Link href="/calendar" className="block">
-              <span className="text-2xl block mb-2">📅</span>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/calendar" className="block">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+            <CardContent className="py-6 text-center">
+              <span className="text-4xl block mb-3">📅</span>
               <span className="font-medium">Calendar</span>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="py-4 text-center">
-            <Link href="/meals" className="block">
-              <span className="text-2xl block mb-2">🍽️</span>
+              <p className="text-xs text-muted-foreground mt-1">View schedule</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/meals" className="block">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+            <CardContent className="py-6 text-center">
+              <span className="text-4xl block mb-3">🍽️</span>
               <span className="font-medium">Meals</span>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="py-4 text-center">
-            <Link href="/snacks" className="block">
-              <span className="text-2xl block mb-2">🥗</span>
+              <p className="text-xs text-muted-foreground mt-1">Browse recipes</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/snacks" className="block">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+            <CardContent className="py-6 text-center">
+              <span className="text-4xl block mb-3">🥗</span>
               <span className="font-medium">Snacks</span>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="py-4 text-center">
-            <Link href="/settings" className="block">
-              <span className="text-2xl block mb-2">⚙️</span>
+              <p className="text-xs text-muted-foreground mt-1">Quick foods</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/settings" className="block">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+            <CardContent className="py-6 text-center">
+              <span className="text-4xl block mb-3">⚙️</span>
               <span className="font-medium">Settings</span>
-            </Link>
-          </CardContent>
-        </Card>
+              <p className="text-xs text-muted-foreground mt-1">Account</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
-      {meals && meals.length > 0 && (
+      {meals.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Today's Meal Ideas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Today&apos;s Meal Ideas</CardTitle>
+            <Link href="/meals" className="text-sm text-[#722F37] hover:underline">View All →</Link>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {meals.map((meal) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`}>
-                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[#722F37]/30 transition-all">
                     {meal.imageUrl && (
-                      <img src={meal.imageUrl} alt={meal.name} className="w-full h-24 object-cover" />
+                      <img src={meal.imageUrl} alt={meal.name} className="w-full h-20 object-cover" />
                     )}
                     <div className="p-3">
-                      <h3 className="font-medium text-sm">{meal.name}</h3>
+                      <h3 className="font-medium text-sm truncate">{meal.name}</h3>
+                      <Badge variant="outline" className="text-xs mt-1 capitalize text-[#722F37] border-[#722F37]">{meal.fastingType}</Badge>
                     </div>
                   </div>
                 </Link>

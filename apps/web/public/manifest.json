@@ -1,0 +1,17 @@
+{
+  "name": "ⲔⲞⲚⲞⲚⲒⲀ",
+  "short_name": "ⲔⲞⲚⲞⲚⲒⲀ",
+  "description": "Orthodox Christian Family Fasting Companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF8F3",
+  "theme_color": "#722F37",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

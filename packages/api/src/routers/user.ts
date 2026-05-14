@@ -29,6 +29,7 @@ export const userRouter = router({
     for (const day of fastingDays) {
       await ctx.db.insert(fastDays)
         .values({
+          id: day.date,
           date: day.date,
           fastingType: day.fastingType,
           fastNotes: day.name || null,
@@ -98,4 +99,30 @@ export const userRouter = router({
       
       return { success: true };
     }),
+
+  updatePantry: protectedProcedure
+    .input(z.object({ ingredients: z.array(z.string()) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.update(user)
+        .set({ pantry: JSON.stringify(input.ingredients) as any })
+        .where(eq(user.id, ctx.session.user.id));
+      
+      return { success: true };
+    }),
+
+  getPantry: protectedProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db.select({ pantry: user.pantry })
+      .from(user)
+      .where(eq(user.id, ctx.session.user.id))
+      .limit(1);
+    
+    const pantryValue = result[0]?.pantry;
+    if (!pantryValue) return [];
+    try {
+      const parsed = typeof pantryValue === 'string' ? JSON.parse(pantryValue) : pantryValue;
+      return parsed as string[];
+    } catch {
+      return [];
+    }
+  }),
 });

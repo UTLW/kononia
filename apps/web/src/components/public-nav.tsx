@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@kononia/ui/components/sheet"
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Logo } from "@/components/logo";
 
 const publicLinks = [
   { href: "/about", label: "About" },
@@ -19,20 +20,36 @@ export function PublicNav() {
   const { data: session } = authClient.useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (session) return null;
+  if (session) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+        <div className="w-full flex h-14 items-center justify-between px-4">
+          <Link href="/">
+            <Logo size="sm" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <ModeToggle />
+            <Link href="/dashboard">
+              <Button size="sm">Open App</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-serif text-xl text-primary font-bold">
-          ⲔⲞⲚⲞⲚⲒⲀ
+      <div className="w-full flex h-14 items-center justify-between px-4">
+        <Link href="/">
+          <Logo size="sm" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
           {publicLinks.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as any}
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 pathname === link.href ? "text-primary" : "text-muted-foreground"
               }`}
@@ -40,17 +57,18 @@ export function PublicNav() {
               {link.label}
             </Link>
           ))}
-          <div className="flex items-center gap-2">
-            <ModeToggle />
-            <Button asChild size="sm">
-              <Link href="/">Sign In</Link>
-            </Button>
-          </div>
         </nav>
+
+        <div className="flex items-center gap-2">
+          <ModeToggle />
+          <Link href="/signin">
+            <Button size="sm">Sign In</Button>
+          </Link>
+        </div>
 
         {/* Mobile nav */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger className="md:hidden">
             <Button variant="ghost" size="icon">
               <Menu className="h-5 w-5" />
             </Button>
@@ -60,18 +78,19 @@ export function PublicNav() {
               {publicLinks.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.href as any}
                   className="text-lg font-medium"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <Button asChild className="mt-4">
-                <Link href="/" onClick={() => setMobileOpen(false)}>
-                  Sign In
-                </Link>
-              </Button>
+              <Link 
+                href="/signin" 
+                onClick={() => setMobileOpen(false)}
+              >
+                <Button className="mt-4">Sign In</Button>
+              </Link>
             </nav>
           </SheetContent>
         </Sheet>

@@ -75,4 +75,22 @@ export const calendarRouter = router({
       where: eq(fastDays.date, today),
     });
   }),
+
+  getUpcomingFastDays: publicProcedure
+    .input(z.object({ days: z.number().default(7) }))
+    .query(async ({ ctx, input }) => {
+      const today = new Date();
+      const startDate = today.toISOString().split("T")[0];
+      const endDate = new Date(today.getTime() + input.days * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      
+      return ctx.db.query.fastDays.findMany({
+        where: and(
+          gte(fastDays.date, startDate),
+          lte(fastDays.date, endDate)
+        ),
+        orderBy: [fastDays.date],
+      });
+    }),
 });

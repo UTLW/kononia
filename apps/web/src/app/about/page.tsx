@@ -6,7 +6,7 @@ export default function AboutPage() {
     <div className="min-h-screen">
       <PublicNav />
       
-      <main className="container py-12 max-w-3xl">
+      <main className="container mx-auto py-12 px-4 max-w-3xl">
         <h1 className="font-serif text-3xl mb-8 text-center">About ⲔⲞⲚⲞⲚⲒⲀ</h1>
         
         <div className="space-y-6 text-muted-foreground">
