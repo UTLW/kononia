@@ -7,7 +7,7 @@ export const calendarRouter = router({
   getSeason: publicProcedure
     .input(z.object({ date: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      const targetDate = input.date || new Date().toISOString().split("T")[0];
+      const targetDate = input.date || new Date().toISOString().split("T")[0] as string;
       
       const season = await ctx.db.query.seasons.findFirst({
         where: and(
@@ -20,12 +20,12 @@ export const calendarRouter = router({
     }),
 
   getCurrentSeason: publicProcedure.query(async ({ ctx }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0] as string;
     
     const season = await ctx.db.query.seasons.findFirst({
       where: and(
-        gte(seasons.startDate, today),
-        lte(seasons.endDate, today)
+        lte(seasons.startDate, today),
+        gte(seasons.endDate, today)
       ),
       orderBy: [desc(seasons.startDate)],
     });
@@ -36,12 +36,8 @@ export const calendarRouter = router({
   listSeasons: publicProcedure
     .input(z.object({ year: z.number().optional() }))
     .query(async ({ ctx, input }) => {
-      const conditions = input.year 
-        ? eq(seasons.year, input.year)
-        : undefined;
-      
       return ctx.db.query.seasons.findMany({
-        where: conditions,
+        where: input.year ? eq(seasons.year, input.year) : undefined,
         orderBy: [desc(seasons.startDate)],
       });
     }),
@@ -70,7 +66,7 @@ export const calendarRouter = router({
     }),
 
   getTodayFastDay: publicProcedure.query(async ({ ctx }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0] as string;
     return ctx.db.query.fastDays.findFirst({
       where: eq(fastDays.date, today),
     });
@@ -79,11 +75,11 @@ export const calendarRouter = router({
   getUpcomingFastDays: publicProcedure
     .input(z.object({ days: z.number().default(7) }))
     .query(async ({ ctx, input }) => {
-      const today = new Date();
-      const startDate = today.toISOString().split("T")[0];
-      const endDate = new Date(today.getTime() + input.days * 24 * 60 * 60 * 1000)
+      const now = new Date();
+      const startDate = now.toISOString().split("T")[0] as string;
+      const endDate = new Date(now.getTime() + input.days * 24 * 60 * 60 * 1000)
         .toISOString()
-        .split("T")[0];
+        .split("T")[0] as string;
       
       return ctx.db.query.fastDays.findMany({
         where: and(
