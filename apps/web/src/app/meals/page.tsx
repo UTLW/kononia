@@ -19,19 +19,19 @@ import {
   Users
 } from "lucide-react";
 
-const CUISINE_LABELS: Record<string, string> = {
-  egyptian: "Egyptian",
-  italian: "Italian",
-  mexican: "Mexican",
-  lebanese: "Lebanese",
-  american: "American",
-  turkish: "Turkish",
-  chinese: "Chinese",
-  japanese: "Japanese",
-  greek: "Greek",
-  "middle-eastern": "Middle Eastern",
-  spanish: "Spanish",
-};
+const CUISINE_OPTIONS = [
+  "Egyptian",
+  "Italian",
+  "Mexican",
+  "Lebanese",
+  "American",
+  "Turkish",
+  "Chinese",
+  "Japanese",
+  "Greek",
+  "Middle Eastern",
+  "Spanish",
+];
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -43,7 +43,6 @@ export default function MealsPage() {
   const [search, setSearch] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [fastingType, setFastingType] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "prepTime" | "cookTime">("name");
   const [cursor, setCursor] = useState<string | undefined>();
   const [showPantry, setShowPantry] = useState(false);
   const [pantryIngredients, setPantryIngredients] = useState<string[]>([]);
@@ -62,8 +61,6 @@ export default function MealsPage() {
   const { data: mealsData, isLoading, isFetching } = trpc.meals.list.useQuery({
     cuisine: cuisine || undefined,
     fastingType: fastingType || undefined,
-    sortBy,
-    sortOrder: "asc",
     limit: 12,
     cursor,
   }, {
@@ -192,8 +189,8 @@ export default function MealsPage() {
           className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
           <option value="">All Cuisines</option>
-          {Object.entries(CUISINE_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+          {CUISINE_OPTIONS.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
 
@@ -206,16 +203,6 @@ export default function MealsPage() {
           {Object.entries(FASTING_TYPE_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
-        </select>
-
-        <select
-          value={sortBy}
-          onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setCursor(undefined); }}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-        >
-          <option value="name">Sort by Name</option>
-          <option value="prepTime">Sort by Prep Time</option>
-          <option value="cookTime">Sort by Cook Time</option>
         </select>
 
         {hasFilters && (

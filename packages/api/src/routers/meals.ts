@@ -1,15 +1,13 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
 import { meals, mealIngredients, mealSteps, mealTags, snacks } from "@kononia/db";
-import { eq, like, and, desc, asc, sql, inArray, or } from "drizzle-orm";
+import { eq, like, and, asc, sql, inArray, or } from "drizzle-orm";
 
 export const mealsRouter = router({
   list: publicProcedure
     .input(z.object({
       cuisine: z.string().optional(),
       fastingType: z.string().optional(),
-      sortBy: z.enum(["name", "prepTime", "cookTime"]).default("name"),
-      sortOrder: z.enum(["asc", "desc"]).default("asc"),
       limit: z.number().min(1).max(50).default(20),
       cursor: z.string().optional(),
     }))
@@ -27,14 +25,10 @@ export const mealsRouter = router({
         }
       }
 
-      const orderByClause = input.sortOrder === "desc" 
-        ? [desc(meals.name)]
-        : [asc(meals.name)];
-
       const result = await ctx.db.query.meals.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: input.limit + 1,
-        orderBy: orderByClause,
+        orderBy: [asc(meals.name)],
       });
 
       let nextCursor: string | undefined;
