@@ -143,16 +143,19 @@ export const mealsRouter = router({
       });
     }),
 
-  getAllSnacks: publicProcedure.query(async ({ ctx }) => {
+getAllSnacks: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.query.snacks.findMany({});
   }),
 
-  getSnack: publicProcedure
+  getSnackById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const snack = await ctx.db.query.snacks.findFirst({
         where: eq(snacks.id, input.id),
       });
+      return snack || null;
+    }),
+});
       
       return snack || null;
     }),

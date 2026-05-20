@@ -81,7 +81,7 @@ export default function CalendarTab() {
             const day = i + 1;
             const fastDay = getFastDay(day);
             const bgColor = fastDay 
-              ? FASTING_TYPE_COLORS[fastDay.fasteningType as keyof typeof FASTING_TYPE_COLORS]
+              ? FASTING_TYPE_COLORS[fastDay.fastingType as keyof typeof FASTING_TYPE_COLORS]
               : COLORS.card;
             
             return (

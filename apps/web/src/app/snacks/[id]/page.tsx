@@ -2,15 +2,27 @@
 
 import { use } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
+import { Card, CardContent } from "@kononia/ui/components/card";
 import { CardLoader } from "@/components/spinner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChefHat } from "lucide-react";
+
+const FASTING_TYPE_LABELS: Record<string, string> = {
+  strict: "Strict Fast",
+  regular: "Regular Fast",
+};
+
+const FASTING_TYPE_COLORS: Record<string, string> = {
+  strict: "bg-[#722F37] text-white",
+  regular: "bg-[#C9A96E] text-white",
+};
 
 export default function SnackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: snack, isLoading } = trpc.meals.getSnack.useQuery({ id });
+  const { data: snack, isLoading } = trpc.meals.getSnackById.useQuery({ id });
 
   if (isLoading) {
     return (
@@ -31,36 +43,46 @@ export default function SnackDetailPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  const fastingLabel = FASTING_TYPE_LABELS[snack.fastingType] || snack.fastingType;
+  const fastingColor = FASTING_TYPE_COLORS[snack.fastingType] || "bg-secondary";
+
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-6">
+    <div className="container mx-auto max-w-4xl px-4 py-6">
       <Link href="/snacks" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="h-4 w-4" />
         Back to Snacks
       </Link>
 
-      {snack.imageUrl && (
-        <img 
-          src={snack.imageUrl} 
-          alt={snack.name}
-          className="w-full h-64 object-cover rounded-lg mb-6"
-        />
+      {snack.imageUrl ? (
+        <div className="relative w-full h-64 rounded-xl overflow-hidden mb-6">
+          <Image
+            src={snack.imageUrl}
+            alt={snack.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw"
+          />
+        </div>
+      ) : (
+        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center mb-6">
+          <ChefHat className="h-14 w-14 text-muted-foreground/30" />
+        </div>
       )}
 
-      <div className="flex items-center gap-3 mb-4">
-        <h1 className="font-serif text-3xl text-foreground">{snack.name}</h1>
-        <Badge className={`text-sm ${
-          snack.fastingType === "strict" ? "bg-[#722F37] text-white" :
-          "bg-[#C9A96E] text-white"
-        }`}>
-          {snack.fastingType === "strict" ? "Strict Fast" : "Regular Fast"}
-        </Badge>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="font-serif text-3xl sm:text-4xl text-foreground">{snack.name}</h1>
+          <Badge className={`text-sm w-fit ${fastingColor}`}>
+            {fastingLabel}
+          </Badge>
+        </div>
+
+        <p className="text-lg text-muted-foreground">{snack.cuisine}</p>
+        
+        {snack.description && (
+          <p className="text-foreground leading-relaxed">{snack.description}</p>
+        )}
       </div>
-
-      <p className="text-muted-foreground mb-4">{snack.cuisine}</p>
-      
-      {snack.description && (
-        <p className="text-foreground">{snack.description}</p>
-      )}
     </div>
   );
 }

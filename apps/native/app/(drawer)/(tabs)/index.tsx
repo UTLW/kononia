@@ -36,7 +36,7 @@ export default function Home() {
     limit: 3 
   });
 
-  const fastingType = fastDay?.fasteningType || "regular";
+  const fastingType = fastDay?.fastingType || "regular";
   const colorClass = FASTING_TYPE_COLORS[fastingType as keyof typeof FASTING_TYPE_COLORS] || COLORS.primary;
 
   return (

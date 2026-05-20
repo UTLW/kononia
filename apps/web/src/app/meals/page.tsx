@@ -8,6 +8,7 @@ import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
 import { Spinner, CardLoader } from "@/components/spinner";
+import { toast } from "sonner";
 import { 
   Search, 
   Filter, 
@@ -74,6 +75,34 @@ export default function MealsPage() {
     enabled: showPantry && pantryIngredients.length > 0,
   });
 
+  const updatePantry = trpc.user.updatePantry.useMutation({
+    onError: (err) => {
+      toast.error("Failed to save pantry");
+      console.error(err);
+    },
+  });
+
+  const handleAddIngredient = (ingredient: string) => {
+    if (ingredient.trim() && !pantryIngredients.includes(ingredient.trim())) {
+      const newIngredients = [...pantryIngredients, ingredient.trim()];
+      setPantryIngredients(newIngredients);
+      updatePantry.mutate({ ingredients: newIngredients });
+      setPantryInput("");
+    }
+  };
+
+  const handleRemoveIngredient = (index: number) => {
+    const newIngredients = pantryIngredients.filter((_, idx) => idx !== index);
+    setPantryIngredients(newIngredients);
+    updatePantry.mutate({ ingredients: newIngredients });
+  };
+
+  const handleClearPantry = () => {
+    setPantryIngredients([]);
+    setShowPantry(false);
+    updatePantry.mutate({ ingredients: [] });
+  };
+
   const displayMeals = showPantry && pantryIngredients.length > 0 
     ? pantryMealsData?.meals || []
     : mealsData?.meals || [];
@@ -118,7 +147,7 @@ export default function MealsPage() {
                   <Badge key={i} variant="secondary" className="gap-1 pl-2">
                     {ing}
                     <button 
-                      onClick={() => setPantryIngredients(pantryIngredients.filter((_, idx) => idx !== i))}
+                      onClick={() => handleRemoveIngredient(i)}
                       className="hover:text-destructive"
                     >
                       <X className="h-3 w-3" />
@@ -129,10 +158,7 @@ export default function MealsPage() {
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (pantryInput.trim() && !pantryIngredients.includes(pantryInput.trim())) {
-                    setPantryIngredients([...pantryIngredients, pantryInput.trim()]);
-                    setPantryInput("");
-                  }
+                  handleAddIngredient(pantryInput);
                 }}
                 className="flex gap-2"
               >
@@ -153,10 +179,7 @@ export default function MealsPage() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => {
-                    setPantryIngredients([]);
-                    setShowPantry(false);
-                  }}
+                  onClick={handleClearPantry}
                 >
                   Clear all
                 </Button>

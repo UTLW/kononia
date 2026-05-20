@@ -105,9 +105,26 @@ app.post("/webhooks/polar", express.raw({ type: "application/json" }), async (re
   try {
     const body = req.body.toString();
     const signature = req.headers["polar-signature"];
+    const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
 
     if (!signature) {
       return res.status(401).json({ error: "Missing signature" });
+    }
+
+    if (webhookSecret) {
+      const crypto = require("crypto");
+      const expectedSignature = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(body)
+        .digest("hex");
+      
+      const signatureBuffer = Buffer.from(signature, "hex");
+      const expectedBuffer = Buffer.from(expectedSignature, "hex");
+      
+      if (signatureBuffer.length !== expectedBuffer.length || 
+          !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
+        return res.status(401).json({ error: "Invalid signature" });
+      }
     }
 
     const event = JSON.parse(body);
@@ -122,32 +139,6 @@ app.post("/webhooks/polar", express.raw({ type: "application/json" }), async (re
 
 app.get("/", (_req, res) => {
   res.status(200).send("OK");
-});
-
-app.post("/api/auth/polar-checkout", async (req, res) => {
-  try {
-    const session = await auth.api.getSession({ headers: req.headers });
-    if (!session) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
-    const productId = process.env.POLAR_PRODUCT_ID;
-    if (!productId) {
-      return res.status(500).json({ error: "Polar product not configured" });
-    }
-
-    const checkout = await polarClient.checkouts.create({
-      productPriceId: productId.startsWith("price_") ? productId : `price_${productId}`,
-      customerId: session.user.id,
-      successUrl: `${env.CORS_ORIGIN}/settings?success=true`,
-      returnUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
-    });
-
-    res.json({ url: checkout.url });
-  } catch (error) {
-    console.error("Checkout error:", error);
-    res.status(500).json({ error: "Failed to create checkout" });
-  }
 });
 
 app.post("/api/sync/coptic", async (_req, res) => {
@@ -207,38 +198,6 @@ app.post("/api/sync/coptic", async (_req, res) => {
   } catch (error) {
     console.error("Sync error:", error);
     res.status(500).json({ error: "Failed to sync Coptic data" });
-  }
-});
-
-app.post("/api/checkout/create", async (req, res) => {
-  try {
-    const session = await auth.api.getSession({ headers: req.headers });
-    if (!session) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
-    const productId = process.env.POLAR_PRODUCT_ID;
-    if (!productId) {
-      return res.status(500).json({ error: "Polar product not configured" });
-    }
-
-    const product = await polarClient.products.get({ id: productId });
-    const productPriceId = product.prices?.items?.[0]?.id;
-    if (!productPriceId) {
-      return res.status(500).json({ error: "Polar product has no prices configured" });
-    }
-
-    const checkout = await polarClient.checkouts.create({
-      productId,
-      productPriceId,
-      successUrl: `${env.CORS_ORIGIN}/settings?success=true`,
-      returnUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
-    });
-
-    res.json({ url: checkout.url });
-  } catch (error) {
-    console.error("Checkout error:", error);
-    res.status(500).json({ error: "Failed to create checkout" });
   }
 });
 

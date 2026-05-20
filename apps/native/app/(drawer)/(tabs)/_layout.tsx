@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useThemeColor } from "heroui-native";
+import { useEffect, useState } from "react";
+import { router } from "expo-router";
+import { authClient } from "@/lib/auth-client";
 
 const COLORS = {
   primary: "#722F37",
@@ -9,8 +12,22 @@ const COLORS = {
 };
 
 export default function TabLayout() {
+  const [isLoading, setIsLoading] = useState(true);
   const themeColorForeground = useThemeColor("foreground");
   const themeColorBackground = useThemeColor("background");
+
+  useEffect(() => {
+    authClient.getSession().then(({ data }) => {
+      if (!data?.session) {
+        router.replace("/signin");
+      }
+      setIsLoading(false);
+    });
+  }, []);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Tabs

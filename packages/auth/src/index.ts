@@ -51,7 +51,7 @@ export function createAuth() {
                 slug: "Pro-(Annual)",
               },
             ],
-            successUrl: "/settings?success=true",
+            successUrl: `${env.POLAR_SUCCESS_URL}/settings?success=true`,
             authenticatedUsersOnly: true,
           }),
           portal(),
