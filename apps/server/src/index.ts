@@ -82,14 +82,14 @@ const app = express();
 
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
 
-app.all("/api/auth{/*path}", toNodeHandler(auth));
+app.use("/api/auth", toNodeHandler(auth));
 
 app.use(
   "/trpc",
@@ -112,51 +112,6 @@ app.post("/webhooks/polar", express.raw({ type: "application/json" }), async (re
 
     const event = JSON.parse(body);
     console.log("Polar webhook received:", event.type);
-
-    switch (event.type) {
-      case "order.created":
-      case "subscription.created": {
-        const customerId = event.data.attributes.customerId;
-        const status = event.data.attributes.status;
-
-        if (status === "completed" || status === "active") {
-          const userRecord = await db
-            .select()
-            .from(user)
-            .where(eq(user.id, customerId))
-            .limit(1);
-
-          if (userRecord[0]) {
-            await db
-              .update(user)
-              .set({ 
-                plan: "annual",
-                subscribedAt: new Date(),
-              })
-              .where(eq(user.id, userRecord[0].id));
-            console.log("User upgraded to annual plan:", userRecord[0].email);
-          }
-        }
-        break;
-      }
-      case "subscription.canceled": {
-        const customerId = event.data.attributes.customerId;
-        const userRecord = await db
-          .select()
-          .from(user)
-          .where(eq(user.id, customerId))
-          .limit(1);
-
-        if (userRecord[0]) {
-          await db
-            .update(user)
-            .set({ plan: "free" })
-            .where(eq(user.id, userRecord[0].id));
-          console.log("User subscription canceled:", userRecord[0].email);
-        }
-        break;
-      }
-    }
 
     res.json({ received: true });
   } catch (error) {
@@ -267,8 +222,15 @@ app.post("/api/checkout/create", async (req, res) => {
       return res.status(500).json({ error: "Polar product not configured" });
     }
 
+    const product = await polarClient.products.get({ id: productId });
+    const productPriceId = product.prices?.items?.[0]?.id;
+    if (!productPriceId) {
+      return res.status(500).json({ error: "Polar product has no prices configured" });
+    }
+
     const checkout = await polarClient.checkouts.create({
       productId,
+      productPriceId,
       successUrl: `${env.CORS_ORIGIN}/settings?success=true`,
       returnUrl: `${env.CORS_ORIGIN}/settings?cancelled=true`,
     });

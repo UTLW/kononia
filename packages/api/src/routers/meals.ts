@@ -74,10 +74,12 @@ export const mealsRouter = router({
         like(mealIngredients.ingredient, `%${ing}%`)
       );
       
+      const orCondition = or(...ingredientConditions);
+      
       const matchingMeals = await ctx.db
         .selectDistinct({ mealId: mealIngredients.mealId })
         .from(mealIngredients)
-        .where(and(...ingredientConditions));
+        .where(orCondition);
 
       if (matchingMeals.length === 0) {
         return { meals: [], matchCount: 0 };
@@ -97,7 +99,7 @@ export const mealsRouter = router({
             .from(mealIngredients)
             .where(and(
               eq(mealIngredients.mealId, meal.id),
-              or(...ingredientConditions)
+              orCondition
             ));
           return { ...meal, matchCount: ingCount[0]?.count || 0 };
         })

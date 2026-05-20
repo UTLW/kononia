@@ -9,13 +9,13 @@ export const seasonsRouter = router({
     
     const season = await ctx.db.query.seasons.findFirst({
       where: and(
-        gte(seasons.startDate, today),
-        lte(seasons.endDate, today)
+        lte(seasons.startDate, today),
+        gte(seasons.endDate, today)
       ),
       orderBy: [desc(seasons.startDate)],
     });
     
-    return season;
+    return season || null;
   }),
 
   getById: publicProcedure

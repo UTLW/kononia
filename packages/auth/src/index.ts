@@ -19,6 +19,8 @@ export function createAuth() {
     }),
     trustedOrigins: [
       env.CORS_ORIGIN,
+      "http://localhost:3000",
+      "http://localhost:3001",
       "kononia://",
       ...(env.NODE_ENV === "development"
         ? ["exp://", "exp://**", "exp://192.168.*.*:*/**", "http://localhost:8081"]
@@ -31,8 +33,8 @@ export function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     advanced: {
       defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
+        sameSite: "lax",
+        secure: env.NODE_ENV === "production",
         httpOnly: true,
       },
     },
@@ -45,11 +47,11 @@ export function createAuth() {
           checkout({
             products: [
               {
-                productId: process.env.POLAR_PRODUCT_ID || "your-product-id",
-                slug: "annual",
+                productId: "0d2c5a91-03ef-4ef3-ba7a-8a6faf08b2f1",
+                slug: "Pro-(Annual)",
               },
             ],
-            successUrl: env.POLAR_SUCCESS_URL,
+            successUrl: "/settings?success=true",
             authenticatedUsersOnly: true,
           }),
           portal(),

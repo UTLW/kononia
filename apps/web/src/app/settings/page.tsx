@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
@@ -15,7 +15,26 @@ export default function SettingsPage() {
   const { data: user } = trpc.user.getProfile.useQuery(undefined, {
     enabled: !!session,
   });
+  const [customerState, setCustomerState] = useState<any>(null);
+  const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+
+  useEffect(() => {
+    if (session) {
+      setIsLoadingCustomer(true);
+      authClient.customer
+        .state()
+        .then(({ data }) => {
+          setCustomerState(data);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoadingCustomer(false));
+    }
+  }, [session]);
+
+  const isSubscribed = customerState?.subscriptions?.some(
+    (sub: { status: string }) => sub.status === "active"
+  );
 
   const syncMutation = useMutation({
     mutationFn: async () => {
@@ -45,26 +64,12 @@ export default function SettingsPage() {
     }
     setIsUpgrading(true);
     try {
-      const result = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/checkout/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      await authClient.checkout({
+        slug: "Pro-(Annual)",
       });
-      const data = await result.json();
-      console.log("Checkout response:", result.status, data);
-      if (!result.ok) {
-        toast.error(data.error || `Error: ${result.status}`);
-        return;
-      }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error("No checkout URL returned");
-      }
     } catch (error) {
       console.error("Failed to create checkout:", error);
       toast.error("Failed to create checkout. Please try again.");
-    } finally {
       setIsUpgrading(false);
     }
   };
@@ -129,8 +134,16 @@ export default function SettingsPage() {
               <li>✓ Push notifications for fast days</li>
               <li>✓ Unlimited calendar history</li>
             </ul>
-            {user?.plan === "annual" ? (
-              <p className="mt-3 text-primary font-medium">You are subscribed!</p>
+            {isSubscribed ? (
+              <div className="mt-3 space-y-2">
+                <p className="text-primary font-medium">You are subscribed!</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => authClient.customer.portal()}
+                >
+                  Manage Subscription
+                </Button>
+              </div>
             ) : (
               <Button 
                 className="mt-3" 
