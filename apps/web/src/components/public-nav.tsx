@@ -23,11 +23,11 @@ export function PublicNav() {
   if (session) {
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="w-full flex h-14 items-center justify-between px-4">
+        <div className="flex h-14 items-center justify-between px-4">
           <Link href="/">
             <Logo size="sm" />
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <ModeToggle />
             <Link href="/dashboard">
               <Button size="sm">Open App</Button>
@@ -40,12 +40,12 @@ export function PublicNav() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="w-full flex h-14 items-center justify-between px-4">
+      <div className="flex h-14 items-center px-4">
         <Link href="/">
           <Logo size="sm" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+        <nav className="hidden md:flex flex-1 justify-center gap-8">
           {publicLinks.map((link) => (
             <Link
               key={link.href}
@@ -59,41 +59,37 @@ export function PublicNav() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ModeToggle />
           <Link href="/signin">
             <Button size="sm">Sign In</Button>
           </Link>
         </div>
 
-        {/* Mobile nav */}
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
+        <div className="flex items-center md:hidden ml-2">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger className="p-2 rounded-md hover:bg-accent">
               <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <nav className="flex flex-col gap-4 mt-8">
-              {publicLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href as any}
-                  className="text-lg font-medium"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
+            </SheetTrigger>
+            <SheetContent side="right">
+              <nav className="flex flex-col gap-4 mt-8">
+                {publicLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href as any}
+                    className="text-lg font-medium"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <Link href="/signin" onClick={() => setMobileOpen(false)}>
+                  <Button className="mt-4 w-full">Sign In</Button>
                 </Link>
-              ))}
-              <Link 
-                href="/signin" 
-                onClick={() => setMobileOpen(false)}
-              >
-                <Button className="mt-4">Sign In</Button>
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

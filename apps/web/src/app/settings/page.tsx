@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
@@ -9,8 +10,100 @@ import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Label } from "@kononia/ui/components/label";
 import { toast } from "sonner";
+import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaClose,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 
-export default function SettingsPage() {
+function SuccessModal() {
+  const [customerState, setCustomerState] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    authClient.customer
+      .state()
+      .then(({ data }) => {
+        setCustomerState(data);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const isSubscribed = customerState?.subscriptions?.some(
+    (sub: { status: string }) => sub.status === "active"
+  );
+
+  return (
+    <Credenza open onOpenChange={() => {}}>
+      <CredenzaContent>
+        <CredenzaHeader className="text-center">
+          <div className="mx-auto mb-4">
+            <CheckCircle2 className="h-12 w-12 text-primary" />
+          </div>
+          <CredenzaTitle>Payment Successful!</CredenzaTitle>
+          <CredenzaDescription>
+            Thank you for subscribing to KONONIA Pro
+          </CredenzaDescription>
+        </CredenzaHeader>
+        <CredenzaBody>
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verifying subscription...</span>
+            </div>
+          ) : isSubscribed ? (
+            <div className="space-y-3">
+              <div className="rounded-lg bg-primary/10 p-4 text-center">
+                <p className="text-primary font-medium">Pro Member</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your subscription is active
+                </p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span> Unlimited meal planning
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span> Weekly shopping list export
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span> Push notifications for fast days
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span> Unlimited calendar history
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">
+              Your subscription is being processed. Please check your email for confirmation.
+            </p>
+          )}
+        </CredenzaBody>
+        <CredenzaFooter>
+          <CredenzaClose asChild>
+            <Button variant="outline">Close</Button>
+          </CredenzaClose>
+          <Button onClick={() => authClient.customer.portal()}>
+            Manage Subscription
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CredenzaFooter>
+      </CredenzaContent>
+    </Credenza>
+  );
+}
+
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const showSuccess = searchParams.get("success") === "true";
   const { data: session, isPending } = authClient.useSession();
   const { data: user } = trpc.user.getProfile.useQuery(undefined, {
     enabled: !!session,
@@ -197,4 +290,26 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
+}
+
+export default function SettingsPage() {
+  return (
+    <>
+      <Suspense fallback={<div className="container mx-auto px-4 py-6">Loading...</div>}>
+        <SettingsContent />
+      </Suspense>
+      <Suspense>
+        <SuccessModalWrapper />
+      </Suspense>
+    </>
+  );
+}
+
+function SuccessModalWrapper() {
+  const searchParams = useSearchParams();
+  const showSuccess = searchParams.get("success") === "true";
+  
+  if (!showSuccess) return null;
+  
+  return <SuccessModal />;
 }
