@@ -11,6 +11,14 @@ import { Spinner } from "@/components/spinner";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FASTING_COLORS, MEAL_TYPES } from "@kononia/ui/lib/constants";
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaDescription,
+} from "@/components/credenza";
 
 const FASTING_TYPE_CONFIG: Record<string, { bg: string; label: string; textClass: string; borderColor: string }> = {
   strict: { 
@@ -42,8 +50,9 @@ export default function CalendarPage() {
   const { data: session } = authClient.useSession();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showMealPicker, setShowMealPicker] = useState(false);
+  const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<string>("lunch");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -80,11 +89,21 @@ export default function CalendarPage() {
 
   const createMealPlan = trpc.mealPlan.create.useMutation({
     onSuccess: () => {
-      setShowMealPicker(false);
+      setMealPickerOpen(false);
     },
   });
 
-  const deleteMealPlan = trpc.mealPlan.delete.useMutation();
+  const deleteMealPlan = trpc.mealPlan.delete.useMutation({
+    onSuccess: () => {
+      setDeleteTarget(null);
+    },
+  });
+
+  const handleConfirmDelete = () => {
+    if (deleteTarget) {
+      deleteMealPlan.mutate({ id: deleteTarget });
+    }
+  };
 
   const fastingDaysMap = useMemo(() => {
     const map = new Map<string, { fastingType: string; fastNotes: string | null }>();
@@ -233,8 +252,8 @@ export default function CalendarPage() {
               day: "numeric" 
             })}
           </CardTitle>
-          <Button size="sm" onClick={() => setShowMealPicker(!showMealPicker)}>
-            {showMealPicker ? "Close" : "+ Add Meal"}
+          <Button size="sm" onClick={() => setMealPickerOpen(true)}>
+            + Add Meal
           </Button>
         </CardHeader>
         <CardContent>
@@ -260,40 +279,6 @@ export default function CalendarPage() {
                 </div>
               )}
 
-              {showMealPicker && (
-                <div className="mt-4 pt-4 border-t space-y-4">
-                  <div className="flex gap-2 flex-wrap">
-                    {MEAL_TYPES.map((type) => (
-                      <Button
-                        key={type.value}
-                        variant={selectedMealType === type.value ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedMealType(type.value)}
-                        className={selectedMealType === type.value ? "bg-[var(--fast-strict)]" : ""}
-                      >
-                        {type.label}
-                      </Button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    {fastingTypeMeals?.map((meal) => (
-                      <div 
-                        key={meal.id}
-                        className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer"
-                        onClick={() => handleAddMeal(meal.id)}
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{meal.name}</p>
-                          <p className="text-xs text-muted-foreground">{meal.cuisineTag}</p>
-                        </div>
-                        <Button variant="ghost" size="sm">+</Button>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">Loading meals...</p>}
-                  </div>
-                </div>
-              )}
-
               {dayMealPlans && dayMealPlans.length > 0 && (
                 <div className="mt-4 pt-4 border-t">
                   <p className="text-sm font-medium mb-3">Planned Meals</p>
@@ -309,7 +294,7 @@ export default function CalendarPage() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => deleteMealPlan.mutate({ id: plan.id })}
+                          onClick={() => setDeleteTarget(plan.id)}
                         >
                           ×
                         </Button>
@@ -319,13 +304,74 @@ export default function CalendarPage() {
                 </div>
               )}
 
-              {dayMealPlans && dayMealPlans.length === 0 && !showMealPicker && (
+              {dayMealPlans && dayMealPlans.length === 0 && (
                 <p className="text-sm text-muted-foreground mt-4">No meals planned yet. Click "+ Add Meal" to plan your meals.</p>
               )}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Credenza open={mealPickerOpen} onOpenChange={setMealPickerOpen}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>Add Meal</CredenzaTitle>
+            <CredenzaDescription>
+              Choose a meal type and select a meal for {selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+            </CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaBody>
+            <div className="flex gap-2 flex-wrap mb-4">
+              {MEAL_TYPES.map((type) => (
+                <Button
+                  key={type.value}
+                  variant={selectedMealType === type.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedMealType(type.value)}
+                  className={selectedMealType === type.value ? "bg-[var(--fast-strict)]" : ""}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              {fastingTypeMeals?.map((meal) => (
+                <div
+                  key={meal.id}
+                  className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer"
+                  onClick={() => handleAddMeal(meal.id)}
+                >
+                  <div>
+                    <p className="font-medium text-sm">{meal.name}</p>
+                    <p className="text-xs text-muted-foreground">{meal.cuisineTag}</p>
+                  </div>
+                  <Button variant="ghost" size="sm">+</Button>
+                </div>
+              )) || <p className="text-sm text-muted-foreground">Loading meals...</p>}
+            </div>
+          </CredenzaBody>
+        </CredenzaContent>
+      </Credenza>
+
+      <Credenza open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>Remove Meal</CredenzaTitle>
+            <CredenzaDescription>
+              Are you sure you want to remove this meal from your plan?
+            </CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Remove
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </div>
   );
 }

@@ -9,8 +9,17 @@ import { Card, CardContent } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
 import { Spinner, CardLoader } from "@/components/spinner";
 import { toast } from "sonner";
-import { Search, X, ChevronRight, ChefHat, Clock, Users } from "lucide-react";
+import { Search, X, ChevronRight, ChefHat, Clock, Users, ExternalLink } from "lucide-react";
 import { CUISINE_OPTIONS, FASTING_COLORS } from "@kononia/ui/lib/constants";
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaDescription,
+  CredenzaFooter,
+} from "@/components/credenza";
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -26,6 +35,11 @@ export default function MealsPage() {
   const [showPantry, setShowPantry] = useState(false);
   const [pantryIngredients, setPantryIngredients] = useState<string[]>([]);
   const [pantryInput, setPantryInput] = useState("");
+  const [previewMealId, setPreviewMealId] = useState<string | null>(null);
+  const { data: previewMeal } = trpc.meals.get.useQuery(
+    { id: previewMealId! },
+    { enabled: !!previewMealId }
+  );
 
   const { data: pantryData } = trpc.user.getPantry.useQuery(undefined, {
     enabled: showPantry,
@@ -229,7 +243,11 @@ export default function MealsPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {displayMeals.map((meal) => (
-              <Link key={meal.id} href={`/meal/${meal.id}`}>
+              <div
+                key={meal.id}
+                className="cursor-pointer"
+                onClick={() => setPreviewMealId(meal.id)}
+              >
                 <Card className="overflow-hidden hover:shadow-md transition-all hover:border-primary/50 cursor-pointer h-full">
                   {meal.imageUrl ? (
                     <img 
@@ -276,7 +294,7 @@ export default function MealsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </div>
             ))}
           </div>
 
@@ -306,6 +324,71 @@ export default function MealsPage() {
           Updating...
         </div>
       )}
+
+      <Credenza open={!!previewMealId} onOpenChange={(open) => { if (!open) setPreviewMealId(null); }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>{previewMeal?.name || "Meal Preview"}</CredenzaTitle>
+            {previewMeal?.cuisineTag && (
+              <CredenzaDescription>{previewMeal.cuisineTag}</CredenzaDescription>
+            )}
+          </CredenzaHeader>
+          <CredenzaBody>
+            {previewMeal?.imageUrl && (
+              <img
+                src={previewMeal.imageUrl}
+                alt={previewMeal.name}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+            )}
+            {previewMeal?.description && (
+              <p className="text-sm text-muted-foreground mb-4">{previewMeal.description}</p>
+            )}
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
+              {previewMeal?.prepTime && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Prep: {previewMeal.prepTime}m
+                </span>
+              )}
+              {previewMeal?.cookTime && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Cook: {previewMeal.cookTime}m
+                </span>
+              )}
+              {previewMeal?.servings && (
+                <span className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {previewMeal.servings} servings
+                </span>
+              )}
+            </div>
+            {previewMeal?.fastingType && (
+              <Badge className={`text-xs ${
+                previewMeal.fastingType === "strict" ? `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}` :
+                previewMeal.fastingType === "regular" ? `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}` :
+                `${FASTING_COLORS.feast.bg} ${FASTING_COLORS.feast.text}`
+              }`}>
+                {previewMeal.fastingType === "strict" ? "Strict Fast" : previewMeal.fastingType === "regular" ? "Regular Fast" : "All Types"}
+              </Badge>
+            )}
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setPreviewMealId(null)}>
+              Close
+            </Button>
+            {previewMealId && (
+              <Link href={`/meal/${previewMealId}`}>
+                <Button>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Full Recipe
+                </Button>
+              </Link>
+            )}
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </div>
   );
 }

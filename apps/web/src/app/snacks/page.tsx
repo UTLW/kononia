@@ -1,13 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { Badge } from "@kononia/ui/components/badge";
+import { Button } from "@kononia/ui/components/button";
 import { CardLoader } from "@/components/spinner";
 import { FASTING_COLORS } from "@kononia/ui/lib/constants";
+import { ExternalLink } from "lucide-react";
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaDescription,
+  CredenzaFooter,
+} from "@/components/credenza";
 
 export default function SnacksPage() {
   const { data: snacks, isLoading } = trpc.meals.getSnacks.useQuery({});
+  const [previewSnackId, setPreviewSnackId] = useState<string | null>(null);
+  const { data: previewSnack } = trpc.meals.getSnackById.useQuery(
+    { id: previewSnackId! },
+    { enabled: !!previewSnackId }
+  );
 
   if (isLoading) {
     return (
@@ -23,7 +40,11 @@ export default function SnacksPage() {
       
       <div className="grid gap-4 sm:grid-cols-2">
         {snacks?.map((snack) => (
-          <Link key={snack.id} href={`/snacks/${snack.id}`}>
+          <div
+            key={snack.id}
+            className="cursor-pointer"
+            onClick={() => setPreviewSnackId(snack.id)}
+          >
             <div className="rounded-lg border bg-card overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
               {snack.imageUrl && (
                 <img 
@@ -44,7 +65,7 @@ export default function SnacksPage() {
                 </Badge>
               </div>
             </div>
-          </Link>
+          </div>
         ))}
         {(!snacks || snacks.length === 0) && (
           <p className="col-span-full text-center py-8 text-muted-foreground">
@@ -52,6 +73,50 @@ export default function SnacksPage() {
           </p>
         )}
       </div>
+
+      <Credenza open={!!previewSnackId} onOpenChange={(open) => { if (!open) setPreviewSnackId(null); }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>{previewSnack?.name || "Snack Preview"}</CredenzaTitle>
+            {previewSnack?.cuisine && (
+              <CredenzaDescription>{previewSnack.cuisine}</CredenzaDescription>
+            )}
+          </CredenzaHeader>
+          <CredenzaBody>
+            {previewSnack?.imageUrl && (
+              <img
+                src={previewSnack.imageUrl}
+                alt={previewSnack.name}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+            )}
+            {previewSnack?.description && (
+              <p className="text-sm text-muted-foreground mb-4">{previewSnack.description}</p>
+            )}
+            {previewSnack?.fastingType && (
+              <Badge className={`text-xs ${
+                previewSnack.fastingType === "strict" ? `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}` :
+                `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}`
+              }`}>
+                {previewSnack.fastingType === "strict" ? "Strict Fast" : "Regular Fast"}
+              </Badge>
+            )}
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setPreviewSnackId(null)}>
+              Close
+            </Button>
+            {previewSnackId && (
+              <Link href={`/snacks/${previewSnackId}`}>
+                <Button>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Full Details
+                </Button>
+              </Link>
+            )}
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </div>
   );
 }
