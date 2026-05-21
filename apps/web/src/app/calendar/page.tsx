@@ -10,7 +10,7 @@ import { Badge } from "@kononia/ui/components/badge";
 import { Spinner } from "@/components/spinner";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { FASTING_COLORS, MEAL_TYPES } from "@kononia/ui/lib/constants";
+import { FASTING_COLORS, MEAL_TYPES, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 import {
   Credenza,
   CredenzaBody,
@@ -84,7 +84,7 @@ export default function CalendarPage() {
 
   const { data: fastingTypeMeals } = trpc.meals.getByFastingType.useQuery({
     fastingType: selectedDayData?.fastingType === "feast" ? "both" : selectedDayData?.fastingType || "regular",
-    limit: 20,
+    limit: QUERY_LIMITS.mealPicker,
   });
 
   const createMealPlan = trpc.mealPlan.create.useMutation({

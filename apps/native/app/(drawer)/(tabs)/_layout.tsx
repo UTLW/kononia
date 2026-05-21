@@ -4,12 +4,9 @@ import { useThemeColor } from "heroui-native";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { authClient } from "@/lib/auth-client";
+import { RAW_COLORS } from "@kononia/ui/lib/constants";
 
-const COLORS = {
-  primary: "#722F37",
-  secondary: "#4A7C59",
-  accent: "#C9A96E",
-};
+const COLORS = RAW_COLORS;
 
 export default function TabLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +40,7 @@ export default function TabLayout() {
         },
         tabBarStyle: {
           backgroundColor: themeColorBackground,
-          borderTopColor: "#E8DFD5",
+          borderTopColor: RAW_COLORS.border,
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: themeColorForeground,

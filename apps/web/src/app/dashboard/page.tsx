@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
-import { FASTING_COLORS } from "@kononia/ui/lib/constants";
+import { FASTING_COLORS, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 
 const fastingColors: Record<string, string> = {
   strict: "from-[#5a252d] to-[var(--fast-strict)]",

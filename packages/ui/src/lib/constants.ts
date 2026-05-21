@@ -16,6 +16,16 @@ export const FASTING_COLORS = {
   },
 } as const;
 
+export const RAW_COLORS = {
+  primary: "#722F37",
+  secondary: "#4A7C59",
+  accent: "#C9A96E",
+  border: "#E8DFD5",
+  strict: "#722F37",
+  regular: "#C9A96E",
+  feast: "#4A7C59",
+} as const;
+
 export const QUERY_LIMITS = {
   meals: 12,
   mealPicker: 20,

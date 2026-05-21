@@ -10,7 +10,7 @@ import { Badge } from "@kononia/ui/components/badge";
 import { Spinner, CardLoader } from "@/components/spinner";
 import { toast } from "sonner";
 import { Search, X, ChevronRight, ChefHat, Clock, Users, ExternalLink } from "lucide-react";
-import { CUISINE_OPTIONS, FASTING_COLORS } from "@kononia/ui/lib/constants";
+import { CUISINE_OPTIONS, FASTING_COLORS, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 import {
   Credenza,
   CredenzaBody,
@@ -54,7 +54,7 @@ export default function MealsPage() {
   const { data: mealsData, isLoading, isFetching } = trpc.meals.list.useQuery({
     cuisine: cuisine || undefined,
     fastingType: fastingType || undefined,
-    limit: 12,
+    limit: QUERY_LIMITS.meals,
     cursor,
   }, {
     staleTime: 30000,
@@ -62,7 +62,7 @@ export default function MealsPage() {
 
   const { data: pantryMealsData, isLoading: pantryLoading } = trpc.meals.getWithIngredients.useQuery({
     ingredients: pantryIngredients,
-    limit: 12,
+    limit: QUERY_LIMITS.meals,
   }, {
     enabled: showPantry && pantryIngredients.length > 0,
   });
