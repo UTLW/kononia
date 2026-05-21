@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
+import { env } from "@kononia/env/web";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Label } from "@kononia/ui/components/label";
@@ -131,7 +132,7 @@ function SettingsContent() {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/sync/coptic`, {
+      const res = await fetch(`${env.NEXT_PUBLIC_SERVER_URL}/api/sync/coptic`, {
         method: "POST",
         credentials: "include",
       });

@@ -11,9 +11,9 @@ import { Badge } from "@kononia/ui/components/badge";
 import { ArrowRight } from "lucide-react";
 
 const fastingColors: Record<string, string> = {
-  strict: "from-[#5a252d] to-[var(--fast-strict)]",
-  regular: "from-[#a8894f] to-[var(--fast-regular)]",
-  feast: "from-[#3d6b4a] to-[var(--fast-feast)]",
+  strict: "from-[var(--fast-strict)] via-[var(--fast-strict)_at_65%] to-black/60",
+  regular: "from-[var(--fast-regular)] via-[var(--fast-regular)_at_65%] to-black/40",
+  feast: "from-[var(--fast-feast)] via-[var(--fast-feast)_at_65%] to-black/40",
 };
 
 function getGreeting(): string {

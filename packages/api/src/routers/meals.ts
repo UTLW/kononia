@@ -145,6 +145,7 @@ export const mealsRouter = router({
           }))
         ),
       };
+    }),
 
   getSnacks: publicProcedure
     .input(z.object({
