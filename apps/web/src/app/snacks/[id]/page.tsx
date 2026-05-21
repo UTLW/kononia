@@ -6,7 +6,6 @@ import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
-import { Card, CardContent } from "@kononia/ui/components/card";
 import { CardLoader } from "@/components/spinner";
 import { ArrowLeft, ChefHat } from "lucide-react";
 import { FASTING_COLORS } from "@kononia/ui/lib/constants";

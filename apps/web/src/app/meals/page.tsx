@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@kononia/ui/components/select";
-import { Spinner, CardLoader } from "@/components/spinner";
+import { CardLoader } from "@/components/spinner";
 import { toast } from "sonner";
 import { Search, X, ChevronRight, ChefHat, Clock, Users, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { CUISINE_OPTIONS, FASTING_COLORS, QUERY_LIMITS } from "@kononia/ui/lib/constants";

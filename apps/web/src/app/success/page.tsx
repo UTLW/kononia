@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
+import { Card, CardContent } from "@kononia/ui/components/card";
 import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
 export default function SuccessPage() {
