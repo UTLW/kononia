@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
 import { ArrowRight } from "lucide-react";
@@ -202,8 +203,8 @@ export default function DashboardPage() {
                 <Link key={meal.id} href={`/meal/${meal.id}`}>
                   <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all group">
                     {meal.imageUrl && (
-                      <div className="aspect-video overflow-hidden">
-                        <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="aspect-video overflow-hidden relative">
+                        <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
                       </div>
                     )}
                     <div className="p-3">

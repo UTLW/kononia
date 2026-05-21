@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
+import Image from "next/image";
 import { Input } from "@kononia/ui/components/input";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent } from "@kononia/ui/components/card";
@@ -269,11 +270,13 @@ export default function MealsPage() {
               >
                 <Card className="overflow-hidden hover:shadow-lg transition-all hover:border-primary/50 cursor-pointer h-full group">
                   {meal.imageUrl ? (
-                    <div className="aspect-video overflow-hidden">
-                      <img 
+                    <div className="aspect-video overflow-hidden relative">
+                      <Image 
                         src={meal.imageUrl} 
                         alt={meal.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
                   ) : (
@@ -406,11 +409,15 @@ export default function MealsPage() {
           </CredenzaHeader>
           <CredenzaBody>
             {previewMeal?.imageUrl && (
-              <img
-                src={previewMeal.imageUrl}
-                alt={previewMeal.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
+              <div className="relative w-full h-48 rounded-lg mb-4 overflow-hidden">
+                <Image
+                  src={previewMeal.imageUrl}
+                  alt={previewMeal.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 500px"
+                />
+              </div>
             )}
             {previewMeal?.description && (
               <p className="text-sm text-muted-foreground mb-4">{previewMeal.description}</p>

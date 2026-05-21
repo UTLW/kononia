@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import { Badge } from "@kononia/ui/components/badge";
 import { Button } from "@kononia/ui/components/button";
@@ -47,11 +48,15 @@ export default function SnacksPage() {
           >
             <div className="rounded-lg border bg-card overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
               {snack.imageUrl && (
-                <img 
-                  src={snack.imageUrl} 
-                  alt={snack.name}
-                  className="w-full h-32 object-cover"
-                />
+                <div className="relative w-full h-32 overflow-hidden">
+                  <Image 
+                    src={snack.imageUrl} 
+                    alt={snack.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
               )}
               <div className="p-4">
                 <h3 className="font-medium text-card-foreground">{snack.name}</h3>
@@ -84,11 +89,15 @@ export default function SnacksPage() {
           </CredenzaHeader>
           <CredenzaBody>
             {previewSnack?.imageUrl && (
-              <img
-                src={previewSnack.imageUrl}
-                alt={previewSnack.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
+              <div className="relative w-full h-48 rounded-lg mb-4 overflow-hidden">
+                <Image
+                  src={previewSnack.imageUrl}
+                  alt={previewSnack.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 500px"
+                />
+              </div>
             )}
             {previewSnack?.description && (
               <p className="text-sm text-muted-foreground mb-4">{previewSnack.description}</p>
