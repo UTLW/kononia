@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
-import { meals, mealIngredients, mealSteps, mealTags, snacks } from "@kononia/db";
+import { meals, mealIngredients, mealTags, snacks } from "@kononia/db";
 import { eq, like, and, asc, sql, inArray, or } from "drizzle-orm";
 
 export const mealsRouter = router({
@@ -143,7 +143,7 @@ export const mealsRouter = router({
       });
     }),
 
-getAllSnacks: publicProcedure.query(async ({ ctx }) => {
+  getAllSnacks: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.query.snacks.findMany({});
   }),
 
@@ -155,33 +155,4 @@ getAllSnacks: publicProcedure.query(async ({ ctx }) => {
       });
       return snack || null;
     }),
-});
-      
-      return snack || null;
-    }),
-
-  search: publicProcedure
-    .input(z.object({ query: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.query.meals.findMany({
-        where: like(meals.name, `%${input.query}%`),
-        limit: 20,
-      });
-    }),
-
-  getCuisines: publicProcedure.query(async () => {
-    return [
-      "egyptian",
-      "italian",
-      "mexican",
-      "lebanese",
-      "american",
-      "turkish",
-      "chinese",
-      "japanese",
-      "greek",
-      "middle-eastern",
-      "spanish",
-    ];
-  }),
 });
