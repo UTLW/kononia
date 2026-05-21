@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
+import { ArrowRight } from "lucide-react";
 
 const fastingColors: Record<string, string> = {
   strict: "from-[#5a252d] to-[var(--fast-strict)]",
@@ -193,7 +194,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Today&apos;s Meal Ideas</CardTitle>
-            <Link href="/meals" className="text-sm text-[var(--fast-strict)] hover:underline">View All →</Link>
+            <Link href="/meals" className="text-sm text-[var(--fast-strict)] hover:underline inline-flex items-center gap-1">View All <ArrowRight className="h-4 w-4" /></Link>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

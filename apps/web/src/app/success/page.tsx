@@ -5,7 +5,7 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent } from "@kononia/ui/components/card";
-import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
 export default function SuccessPage() {
   const [customerState, setCustomerState] = useState<any>(null);
@@ -80,8 +80,8 @@ export default function SuccessPage() {
       </Card>
 
       <div className="mt-6 text-center">
-        <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back to Dashboard
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
         </Link>
       </div>
     </div>

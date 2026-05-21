@@ -5,10 +5,10 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "kononia",
     short_name: "kononia",
     description: "my pwa app",
-    start_url: "/new",
+    start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#000000",
+    background_color: "#FDF8F3",
+    theme_color: "#722F37",
     icons: [
       {
         src: "/favicon/web-app-manifest-192x192.png",

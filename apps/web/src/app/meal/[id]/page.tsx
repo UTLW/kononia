@@ -150,9 +150,9 @@ export default function MealDetailPage({ params }: { params: Promise<{ id: strin
                 {meal.ingredients.map((ing, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <Checkbox id={`ing-${i}`} />
-                    <label htmlFor={`ing-${i}`} className="text-foreground cursor-pointer hover:text-primary transition-colors">
+                    <Label htmlFor={`ing-${i}`} className="text-foreground cursor-pointer hover:text-primary transition-colors">
                       {ing.ingredient}
-                    </label>
+                    </Label>
                   </li>
                 ))}
               </ul>

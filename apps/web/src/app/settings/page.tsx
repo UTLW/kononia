@@ -267,7 +267,7 @@ function SettingsContent() {
               {syncMutation.isPending ? "Syncing..." : "Sync Coptic Data"}
             </Button>
             {syncMutation.isError && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-destructive">
                 Last sync failed. The API may be unavailable.
               </p>
             )}
