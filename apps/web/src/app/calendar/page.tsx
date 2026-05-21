@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
 import { Spinner } from "@/components/spinner";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { FASTING_COLORS, MEAL_TYPES, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 import {
   Credenza,
@@ -192,14 +192,14 @@ export default function CalendarPage() {
               size="icon-sm"
               onClick={() => handleMonthChange(new Date(year, month - 1, 1))}
             >
-              ←
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button 
               variant="outline" 
               size="icon-sm"
               onClick={() => handleMonthChange(new Date(year, month + 1, 1))}
             >
-              →
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
@@ -266,7 +266,8 @@ export default function CalendarPage() {
             })}
           </CardTitle>
           <Button size="sm" onClick={() => setMealPickerOpen(true)}>
-            + Add Meal
+            <Plus className="h-4 w-4 mr-1" />
+            Add Meal
           </Button>
         </CardHeader>
         <CardContent>
@@ -369,8 +370,6 @@ export default function CalendarPage() {
           </CredenzaBody>
         </CredenzaContent>
       </Credenza>
-
-      <Credenza open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
 
       <Credenza open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
         <CredenzaContent>

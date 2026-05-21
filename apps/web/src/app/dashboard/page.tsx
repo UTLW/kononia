@@ -152,37 +152,37 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/calendar" className="block">
+        <Link href="/calendar" className="block group">
           <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
-              <span className="text-4xl block mb-3">📅</span>
+              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">📅</span>
               <span className="font-medium">Calendar</span>
               <p className="text-xs text-muted-foreground mt-1">View schedule</p>
             </CardContent>
           </Card>
         </Link>
-        <Link href="/meals" className="block">
+        <Link href="/meals" className="block group">
           <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
-              <span className="text-4xl block mb-3">🍽️</span>
+              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">🍽️</span>
               <span className="font-medium">Meals</span>
               <p className="text-xs text-muted-foreground mt-1">Browse recipes</p>
             </CardContent>
           </Card>
         </Link>
-        <Link href="/snacks" className="block">
+        <Link href="/snacks" className="block group">
           <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
-              <span className="text-4xl block mb-3">🥗</span>
+              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">🥗</span>
               <span className="font-medium">Snacks</span>
               <p className="text-xs text-muted-foreground mt-1">Quick foods</p>
             </CardContent>
           </Card>
         </Link>
-        <Link href="/settings" className="block">
+        <Link href="/settings" className="block group">
           <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
-              <span className="text-4xl block mb-3">⚙️</span>
+              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">⚙️</span>
               <span className="font-medium">Settings</span>
               <p className="text-xs text-muted-foreground mt-1">Account</p>
             </CardContent>
@@ -200,9 +200,11 @@ export default function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {meals.map((meal) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`}>
-                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all">
+                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all group">
                     {meal.imageUrl && (
-                      <img src={meal.imageUrl} alt={meal.name} className="w-full h-20 object-cover" />
+                      <div className="aspect-video overflow-hidden">
+                        <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
                     )}
                     <div className="p-3">
                       <h3 className="font-medium text-sm truncate">{meal.name}</h3>

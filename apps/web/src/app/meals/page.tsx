@@ -267,15 +267,17 @@ export default function MealsPage() {
                 className="cursor-pointer"
                 onClick={() => setPreviewMealId(meal.id)}
               >
-                <Card className="overflow-hidden hover:shadow-md transition-all hover:border-primary/50 cursor-pointer h-full">
+                <Card className="overflow-hidden hover:shadow-lg transition-all hover:border-primary/50 cursor-pointer h-full group">
                   {meal.imageUrl ? (
-                    <img 
-                      src={meal.imageUrl} 
-                      alt={meal.name}
-                      className="w-full h-40 object-cover"
-                    />
+                    <div className="aspect-video overflow-hidden">
+                      <img 
+                        src={meal.imageUrl} 
+                        alt={meal.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   ) : (
-                    <div className="w-full h-40 bg-muted flex items-center justify-center">
+                    <div className="aspect-video bg-muted flex items-center justify-center">
                       <ChefHat className="h-12 w-12 text-muted-foreground/50" />
                     </div>
                   )}
