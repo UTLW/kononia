@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { Calendar } from "@kononia/ui/components/calendar";
@@ -10,6 +11,8 @@ import { Badge } from "@kononia/ui/components/badge";
 import { Spinner } from "@/components/spinner";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { FASTING_COLORS, MEAL_TYPES, QUERY_LIMITS } from "@kononia/ui/lib/constants";
+import { toast } from "sonner";
+import Link from "next/link";
 import {
   Credenza,
   CredenzaBody,
@@ -47,6 +50,7 @@ const MONTHS = [
 ];
 
 export default function CalendarPage() {
+  const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -92,18 +96,33 @@ export default function CalendarPage() {
   const createMealPlan = trpc.mealPlan.create.useMutation({
     onSuccess: () => {
       setMealPickerOpen(false);
+      queryClient.invalidateQueries({ queryKey: [["mealPlan"]] });
+      toast.success("Meal added to plan");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to add meal");
     },
   });
 
   const deleteMealPlan = trpc.mealPlan.delete.useMutation({
     onSuccess: () => {
       setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: [["mealPlan"]] });
+      toast.success("Meal removed from plan");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to remove meal");
     },
   });
 
   const updateMealPlan = trpc.mealPlan.update.useMutation({
     onSuccess: () => {
       setEditTarget(null);
+      queryClient.invalidateQueries({ queryKey: [["mealPlan"]] });
+      toast.success("Meal updated");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update meal");
     },
   });
 
@@ -165,8 +184,16 @@ export default function CalendarPage() {
 
   if (!session) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-6 text-center">
+      <div className="container mx-auto max-w-4xl px-4 py-6 text-center space-y-4">
         <p className="text-muted-foreground">Please sign in to view the calendar.</p>
+        <div className="flex gap-3 justify-center">
+          <Link href="/signin">
+            <Button>Sign In</Button>
+          </Link>
+          <Link href="/">
+            <Button variant="outline">Go Home</Button>
+          </Link>
+        </div>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,7 +38,10 @@ const FASTING_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function MealsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [cuisine, setCuisine] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [fastingType, setFastingType] = useState("");
   const [cursor, setCursor] = useState<string | undefined>();
@@ -49,6 +53,12 @@ export default function MealsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [pendingCuisine, setPendingCuisine] = useState("");
   const [pendingFastingType, setPendingFastingType] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data: previewMeal } = trpc.meals.get.useQuery(
     { id: previewMealId! },
     { enabled: !!previewMealId }
@@ -67,6 +77,7 @@ export default function MealsPage() {
   const { data: mealsData, isLoading, isFetching } = trpc.meals.list.useQuery({
     cuisine: cuisine || undefined,
     fastingType: fastingType || undefined,
+    search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
     limit: QUERY_LIMITS.meals,
     cursor,
   }, {
@@ -114,16 +125,19 @@ export default function MealsPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setDebouncedSearch(search);
     setCursor(undefined);
   };
 
   const handleClearFilters = () => {
     setSearch("");
+    setDebouncedSearch("");
     setCuisine("");
     setFastingType("");
     setPendingCuisine("");
     setPendingFastingType("");
     setCursor(undefined);
+    queryClient.invalidateQueries({ queryKey: [["meals", "list"]] });
   };
 
   const hasFilters = cuisine || fastingType || search;
@@ -392,6 +406,7 @@ export default function MealsPage() {
               setFastingType(pendingFastingType);
               setCursor(undefined);
               setFilterOpen(false);
+              queryClient.invalidateQueries({ queryKey: [["meals", "list"]] });
             }}>
               Apply Filters
             </Button>

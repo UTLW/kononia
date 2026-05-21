@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
 import { meals, mealIngredients, mealTags, snacks } from "@kononia/db";
-import { eq, and, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, like, asc, sql, inArray } from "drizzle-orm";
 
 const INSTRUCTION_WORDS = /\b(for the|in a|to taste|optional|as needed|divided|such as|like|or until|until|enough)\b/i;
 
@@ -17,12 +17,19 @@ export const mealsRouter = router({
     .input(z.object({
       cuisine: z.string().optional(),
       fastingType: z.string().optional(),
+      search: z.string().optional(),
       limit: z.number().min(1).max(50).default(20),
       cursor: z.string().optional(),
     }))
     .query(async ({ ctx, input }) => {
       const conditions = [];
       
+      if (input.search && input.search.length >= 2) {
+        conditions.push(or(
+          like(meals.name, `%${input.search}%`),
+          like(meals.description, `%${input.search}%`)
+        ));
+      }
       if (input.cuisine) {
         conditions.push(eq(meals.cuisine, input.cuisine));
       }
