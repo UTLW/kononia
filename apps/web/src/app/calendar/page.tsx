@@ -17,6 +17,7 @@ import {
   CredenzaHeader,
   CredenzaTitle,
   CredenzaDescription,
+  CredenzaFooter,
 } from "@/components/credenza";
 
 const FASTING_TYPE_CONFIG: Record<string, { bg: string; label: string; textClass: string; borderColor: string }> = {

@@ -1,7 +1,16 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
 import { meals, mealIngredients, mealTags, snacks } from "@kononia/db";
-import { eq, like, and, asc, sql, inArray, or } from "drizzle-orm";
+import { eq, and, asc, sql, inArray } from "drizzle-orm";
+
+const INSTRUCTION_WORDS = /\b(for the|in a|to taste|optional|as needed|divided|such as|like|or until|until|enough)\b/i;
+
+function cleanIngredient(raw: string): string[] {
+  return raw
+    .split("\n")
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !INSTRUCTION_WORDS.test(s));
+}
 
 export const mealsRouter = router({
   list: publicProcedure
@@ -64,44 +73,48 @@ export const mealsRouter = router({
       limit: z.number().min(1).max(50).default(20),
     }))
     .query(async ({ ctx, input }) => {
-      const ingredientConditions = input.ingredients.map(ing => 
-        like(mealIngredients.ingredient, `%${ing}%`)
+      const words = input.ingredients.flatMap(ing =>
+        ing.toLowerCase().trim().split(/[\s,]+/).filter(Boolean)
       );
-      
-      const orCondition = or(...ingredientConditions);
-      
-      const matchingMeals = await ctx.db
-        .selectDistinct({ mealId: mealIngredients.mealId })
-        .from(mealIngredients)
-        .where(orCondition);
 
-      if (matchingMeals.length === 0) {
+      if (words.length === 0) {
         return { meals: [], matchCount: 0 };
       }
 
-      const mealIds = matchingMeals.map(m => m.mealId);
-      
+      const allMealIngredients = await ctx.db
+        .select({ mealId: mealIngredients.mealId, ingredient: mealIngredients.ingredient })
+        .from(mealIngredients);
+
+      const matchingMealIds = new Set<string>();
+      for (const mi of allMealIngredients) {
+        const cleaned = cleanIngredient(mi.ingredient);
+        for (const c of cleaned) {
+          const lower = c.toLowerCase();
+          if (words.some(w => lower.includes(w))) {
+            matchingMealIds.add(mi.mealId);
+          }
+        }
+      }
+
+      if (matchingMealIds.size === 0) {
+        return { meals: [], matchCount: 0 };
+      }
+
+      const mealIds = [...matchingMealIds];
+
       const result = await ctx.db.query.meals.findMany({
         where: inArray(meals.id, mealIds),
         limit: input.limit,
       });
 
-      const mealsWithMatchCount = await Promise.all(
-        result.map(async (meal) => {
-          const ingCount = await ctx.db
-            .select({ count: sql<number>`count(*)` })
-            .from(mealIngredients)
-            .where(and(
-              eq(mealIngredients.mealId, meal.id),
-              orCondition
-            ));
-          return { ...meal, matchCount: ingCount[0]?.count || 0 };
-        })
-      );
+      const mealsWithMatchCount = result.map(meal => ({
+        ...meal,
+        matchCount: mealIds.filter(id => id === meal.id).length,
+      }));
 
       return {
         meals: mealsWithMatchCount.sort((a, b) => b.matchCount - a.matchCount),
-        matchCount: matchingMeals.length,
+        matchCount: mealIds.length,
       };
     }),
 
@@ -121,8 +134,17 @@ export const mealsRouter = router({
         },
       });
       
-      return meal || null;
-    }),
+      if (!meal) return null;
+
+      return {
+        ...meal,
+        ingredients: meal.ingredients.flatMap(ing =>
+          cleanIngredient(ing.ingredient).map(cleaned => ({
+            ...ing,
+            ingredient: cleaned,
+          }))
+        ),
+      };
 
   getSnacks: publicProcedure
     .input(z.object({

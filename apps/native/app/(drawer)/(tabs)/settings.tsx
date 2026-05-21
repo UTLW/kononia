@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { useThemeColor } from "heroui-native";
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 
 import { Container } from "@/components/container";
 import { trpc } from "@/utils/trpc";
+import { authClient } from "@/lib/auth-client";
 
 const COLORS = {
   primary: "#722F37",
@@ -18,6 +20,23 @@ export default function SettingsTab() {
   const { data: user } = trpc.user.getProfile.useQuery(undefined, {
     retry: false,
   });
+
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    authClient.customer
+      .state()
+      .then(({ data }: any) => {
+        setIsSubscribed(
+          data?.subscriptions?.some((sub: { status: string }) => sub.status === "active") ?? false
+        );
+      })
+      .catch(() => {
+        setIsSubscribed(user?.plan === "annual");
+      })
+      .finally(() => setChecking(false));
+  }, []);
 
   return (
     <ScrollView className="flex-1" style={{ backgroundColor: COLORS.background }}>
@@ -63,7 +82,7 @@ export default function SettingsTab() {
           <View className="rounded-md border-2 border-primary p-3">
             <Text className="font-medium" style={{ color: themeColorForeground }}>Annual - $9.99/year</Text>
             <Text className="text-sm opacity-70 mb-2">Unlimited meal planning, shopping lists, push notifications</Text>
-            {user?.plan === "annual" ? (
+            {user?.plan === "annual" || isSubscribed ? (
               <Text className="text-primary font-medium">Subscribed!</Text>
             ) : (
               <TouchableOpacity 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@kononia/ui/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
@@ -33,6 +33,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = authClient.useSession();
 
   if (!session) return null;
@@ -75,7 +76,15 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          onClick={() => authClient.signOut()}
+          onClick={() => {
+            authClient.signOut({
+              fetchOptions: {
+                onSuccess: () => {
+                  router.push("/");
+                },
+              },
+            });
+          }}
         >
           <LogOut className="h-5 w-5 mr-3" />
           Sign Out
