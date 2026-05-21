@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../index";
-import { mealPlans, meals } from "@kononia/db";
+import { protectedProcedure, router } from "../index";
+import { mealPlans } from "@kononia/db";
 import { eq, and, gte, lte } from "drizzle-orm";
 
 export const mealPlanRouter = router({
@@ -28,6 +28,24 @@ export const mealPlanRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(mealPlans).where(
+        and(
+          eq(mealPlans.id, input.id),
+          eq(mealPlans.userId, ctx.session.user.id)
+        )
+      );
+
+      return { success: true };
+    }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+      mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.update(mealPlans).set({
+        mealType: input.mealType,
+      }).where(
         and(
           eq(mealPlans.id, input.id),
           eq(mealPlans.userId, ctx.session.user.id)

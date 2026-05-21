@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
 import { Spinner } from "@/components/spinner";
-import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FASTING_COLORS, MEAL_TYPES, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 import {
@@ -53,6 +52,8 @@ export default function CalendarPage() {
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<string>("lunch");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<{ id: string; mealType: string; mealName: string } | null>(null);
+  const [editMealType, setEditMealType] = useState("lunch");
   
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -99,9 +100,21 @@ export default function CalendarPage() {
     },
   });
 
+  const updateMealPlan = trpc.mealPlan.update.useMutation({
+    onSuccess: () => {
+      setEditTarget(null);
+    },
+  });
+
   const handleConfirmDelete = () => {
     if (deleteTarget) {
       deleteMealPlan.mutate({ id: deleteTarget });
+    }
+  };
+
+  const handleEditMeal = () => {
+    if (editTarget) {
+      updateMealPlan.mutate({ id: editTarget.id, mealType: editMealType as "breakfast" | "lunch" | "dinner" | "snack" });
     }
   };
 
@@ -287,9 +300,12 @@ export default function CalendarPage() {
                       <div key={plan.id} className="flex items-center justify-between p-2 rounded bg-muted">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className="capitalize">{plan.mealType}</Badge>
-                          <Link href={`/meal/${plan.meal.id}`} className="hover:text-[var(--fast-strict)] text-sm">
+                          <button
+                            onClick={() => { setEditTarget({ id: plan.id, mealType: plan.mealType, mealName: plan.meal.name }); setEditMealType(plan.mealType); }}
+                            className="hover:text-[var(--fast-strict)] text-sm text-left cursor-pointer"
+                          >
                             {plan.meal.name}
-                          </Link>
+                          </button>
                         </div>
                         <Button 
                           variant="ghost" 
@@ -351,6 +367,42 @@ export default function CalendarPage() {
               )) || <p className="text-sm text-muted-foreground">Loading meals...</p>}
             </div>
           </CredenzaBody>
+        </CredenzaContent>
+      </Credenza>
+
+      <Credenza open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+
+      <Credenza open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>Edit Meal</CredenzaTitle>
+            <CredenzaDescription>
+              Change meal type for {editTarget?.mealName}
+            </CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaBody>
+            <div className="flex gap-2 flex-wrap">
+              {MEAL_TYPES.map((type) => (
+                <Button
+                  key={type.value}
+                  variant={editMealType === type.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setEditMealType(type.value)}
+                  className={editMealType === type.value ? "bg-[var(--fast-strict)]" : ""}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setEditTarget(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditMeal}>
+              Save
+            </Button>
+          </CredenzaFooter>
         </CredenzaContent>
       </Credenza>
 
