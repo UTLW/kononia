@@ -12,13 +12,32 @@ export default function SuccessPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+      if (!cancelled) setIsLoading(false);
+    }, 15000);
+
     authClient.customer
       .state()
       .then(({ data }) => {
-        setCustomerState(data);
+        if (!cancelled) setCustomerState(data);
       })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to verify subscription:", err);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          clearTimeout(timeout);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, []);
 
   const isSubscribed = customerState?.subscriptions?.some(

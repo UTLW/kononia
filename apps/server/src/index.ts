@@ -10,7 +10,6 @@ import { db } from "@kononia/db";
 import { user } from "@kononia/db/schema/auth";
 import { seasons, fastDays } from "@kononia/db";
 import { eq, sql } from "drizzle-orm";
-import { polarClient } from "@kononia/auth/lib/payments";
 import { getYearFastingCalendar, getYearSeasons, getTodayCopticDate } from "./lib/coptic-api";
 
 async function syncCopticData() {
@@ -100,42 +99,6 @@ app.use(
 );
 
 app.use(express.json());
-
-app.post("/webhooks/polar", express.raw({ type: "application/json" }), async (req, res) => {
-  try {
-    const body = req.body.toString();
-    const signature = req.headers["polar-signature"];
-    const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
-
-    if (!signature) {
-      return res.status(401).json({ error: "Missing signature" });
-    }
-
-    if (webhookSecret) {
-      const crypto = require("crypto");
-      const expectedSignature = crypto
-        .createHmac("sha256", webhookSecret)
-        .update(body)
-        .digest("hex");
-      
-      const signatureBuffer = Buffer.from(signature, "hex");
-      const expectedBuffer = Buffer.from(expectedSignature, "hex");
-      
-      if (signatureBuffer.length !== expectedBuffer.length || 
-          !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
-        return res.status(401).json({ error: "Invalid signature" });
-      }
-    }
-
-    const event = JSON.parse(body);
-    console.log("Polar webhook received:", event.type);
-
-    res.json({ received: true });
-  } catch (error) {
-    console.error("Webhook error:", error);
-    res.status(500).json({ error: "Webhook processing failed" });
-  }
-});
 
 app.get("/", (_req, res) => {
   res.status(200).send("OK");
