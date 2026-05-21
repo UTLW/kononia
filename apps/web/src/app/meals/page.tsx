@@ -7,9 +7,17 @@ import { Input } from "@kononia/ui/components/input";
 import { Button } from "@kononia/ui/components/button";
 import { Card, CardContent } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
+import { Label } from "@kononia/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@kononia/ui/components/select";
 import { Spinner, CardLoader } from "@/components/spinner";
 import { toast } from "sonner";
-import { Search, X, ChevronRight, ChefHat, Clock, Users, ExternalLink } from "lucide-react";
+import { Search, X, ChevronRight, ChefHat, Clock, Users, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { CUISINE_OPTIONS, FASTING_COLORS, QUERY_LIMITS } from "@kononia/ui/lib/constants";
 import {
   Credenza,
@@ -33,9 +41,13 @@ export default function MealsPage() {
   const [fastingType, setFastingType] = useState("");
   const [cursor, setCursor] = useState<string | undefined>();
   const [showPantry, setShowPantry] = useState(false);
+  const [pantryOpen, setPantryOpen] = useState(false);
   const [pantryIngredients, setPantryIngredients] = useState<string[]>([]);
   const [pantryInput, setPantryInput] = useState("");
   const [previewMealId, setPreviewMealId] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingCuisine, setPendingCuisine] = useState("");
+  const [pendingFastingType, setPendingFastingType] = useState("");
   const { data: previewMeal } = trpc.meals.get.useQuery(
     { id: previewMealId! },
     { enabled: !!previewMealId }
@@ -108,6 +120,8 @@ export default function MealsPage() {
     setSearch("");
     setCuisine("");
     setFastingType("");
+    setPendingCuisine("");
+    setPendingFastingType("");
     setCursor(undefined);
   };
 
@@ -118,68 +132,80 @@ export default function MealsPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl text-foreground">Meals</h1>
         <Button 
-          variant={showPantry ? "default" : "outline"} 
+          variant="outline" 
           size="sm"
-          onClick={() => setShowPantry(!showPantry)}
+          onClick={() => setPantryOpen(true)}
         >
           <ChefHat className="h-4 w-4 mr-2" />
           What's in your pantry?
         </Button>
       </div>
 
-      {showPantry && (
-        <Card className="border-primary/50">
-          <CardContent className="pt-4">
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Add ingredients you have on hand to find matching meals
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {pantryIngredients.map((ing, i) => (
-                  <Badge key={i} variant="secondary" className="gap-1 pl-2">
-                    {ing}
-                    <button 
-                      onClick={() => handleRemoveIngredient(i)}
-                      className="hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddIngredient(pantryInput);
-                }}
-                className="flex gap-2"
-              >
-                <Input
-                  placeholder="Add ingredient..."
-                  value={pantryInput}
-                  onChange={(e) => setPantryInput(e.target.value)}
-                  className="flex-1"
-                />
-                <Button type="submit" variant="secondary" size="sm">
-                  Add
-                </Button>
-              </form>
+      <Credenza open={pantryOpen} onOpenChange={(open) => {
+        if (!open) {
+          setPantryOpen(false);
+        }
+      }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>What's in your pantry?</CredenzaTitle>
+            <CredenzaDescription>Add ingredients you have on hand to find matching meals</CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaBody className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddIngredient(pantryInput);
+              }}
+              className="flex gap-2"
+            >
+              <Input
+                placeholder="Add ingredient..."
+                value={pantryInput}
+                onChange={(e) => setPantryInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" variant="secondary" size="sm">
+                Add
+              </Button>
+            </form>
+            <div className="flex flex-wrap gap-2">
+              {pantryIngredients.map((ing, i) => (
+                <Badge key={i} variant="secondary" className="gap-1 pl-2">
+                  {ing}
+                  <button
+                    onClick={() => handleRemoveIngredient(i)}
+                    className="hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            {pantryIngredients.length > 0 && (
               <div className="flex justify-between items-center">
                 <p className="text-xs text-muted-foreground">
                   {pantryMealsData?.matchCount || 0} matching meals found
                 </p>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={handleClearPantry}
-                >
+                <Button variant="ghost" size="sm" onClick={() => {
+                  handleClearPantry();
+                  setPantryOpen(false);
+                }}>
                   Clear all
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button onClick={() => {
+              setPantryOpen(false);
+              if (pantryIngredients.length > 0) setShowPantry(true);
+            }}>
+              {pantryIngredients.length > 0 ? "Show Matching Meals" : "Close"}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
 
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="relative flex-1">
@@ -198,27 +224,20 @@ export default function MealsPage() {
       </form>
 
       <div className="flex flex-wrap gap-2 items-center">
-        <select
-          value={cuisine}
-          onChange={(e) => { setCuisine(e.target.value); setCursor(undefined); }}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { setPendingCuisine(cuisine); setPendingFastingType(fastingType); setFilterOpen(true); }}
+          className="relative"
         >
-          <option value="">All Cuisines</option>
-          {CUISINE_OPTIONS.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-
-        <select
-          value={fastingType}
-          onChange={(e) => { setFastingType(e.target.value); setCursor(undefined); }}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-        >
-          <option value="">All Fasting Types</option>
-          {Object.entries(FASTING_TYPE_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
+          Filters
+          {hasFilters && (
+            <span className="ml-1.5 rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4 flex items-center justify-center">
+              {(cuisine ? 1 : 0) + (fastingType ? 1 : 0)}
+            </span>
+          )}
+        </Button>
 
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={handleClearFilters}>
@@ -324,6 +343,56 @@ export default function MealsPage() {
           Updating...
         </div>
       )}
+
+      <Credenza open={filterOpen} onOpenChange={(open) => { if (!open) setFilterOpen(false); }}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>Filters</CredenzaTitle>
+            <CredenzaDescription>Filter meals by cuisine and fasting type</CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaBody className="space-y-4">
+            <div className="space-y-2">
+              <Label>Cuisine</Label>
+              <Select value={pendingCuisine} onValueChange={setPendingCuisine}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Cuisines" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CUISINE_OPTIONS.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Fasting Type</Label>
+              <Select value={pendingFastingType} onValueChange={setPendingFastingType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Fasting Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FASTING_TYPE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button variant="ghost" onClick={() => { setPendingCuisine(""); setPendingFastingType(""); }}>
+              Reset
+            </Button>
+            <Button onClick={() => {
+              setCuisine(pendingCuisine);
+              setFastingType(pendingFastingType);
+              setCursor(undefined);
+              setFilterOpen(false);
+            }}>
+              Apply Filters
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
 
       <Credenza open={!!previewMealId} onOpenChange={(open) => { if (!open) setPreviewMealId(null); }}>
         <CredenzaContent>

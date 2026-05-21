@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@kononia/ui/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { useMediaQuery } from "@kononia/ui/hooks/use-media-query"
 import {
   Dialog,
   DialogClose,

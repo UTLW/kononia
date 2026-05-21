@@ -8,6 +8,8 @@ import { trpc } from "@/utils/trpc";
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
 import { Checkbox } from "@kononia/ui/components/checkbox";
+import { Input } from "@kononia/ui/components/input";
+import { Label } from "@kononia/ui/components/label";
 import { CardLoader } from "@/components/spinner";
 import { ArrowLeft, Clock, Users, ChefHat, CalendarPlus } from "lucide-react";
 import { Card, CardContent } from "@kononia/ui/components/card";
@@ -200,17 +202,17 @@ export default function MealDetailPage({ params }: { params: Promise<{ id: strin
           </CredenzaHeader>
           <CredenzaBody className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Date</label>
-              <input
+              <Label>Date</Label>
+              <Input
                 type="date"
                 value={planDate}
                 onChange={(e) => setPlanDate(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="mt-1"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Meal Type</label>
-              <div className="flex gap-2 flex-wrap">
+              <Label>Meal Type</Label>
+              <div className="flex gap-2 flex-wrap mt-1">
                 {MEAL_TYPES.map((type) => (
                   <Button
                     key={type.value}
