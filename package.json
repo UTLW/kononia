@@ -13,6 +13,8 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
+    "test": "turbo test",
+    "test:run": "turbo test",
     "db:push": "turbo -F @kononia/db db:push",
     "db:studio": "turbo -F @kononia/db db:studio",
     "db:generate": "turbo -F @kononia/db db:generate",

@@ -9,7 +9,10 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@kononia/auth": "workspace:*",
     "@kononia/db": "workspace:*",
@@ -24,6 +27,7 @@
   "devDependencies": {
     "@kononia/config": "workspace:*",
     "@types/express": "catalog:",
-    "typescript": "^6"
+    "typescript": "^6",
+    "vitest": "^4.1.6"
   }
 }

@@ -6,6 +6,7 @@ import Providers from "@/components/providers";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@kononia/ui/components/sidebar";
 import { ClientAuthCheck } from "@/components/client-auth-check";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -50,9 +51,11 @@ export default function RootLayout({
       >
         <Providers>
           <ClientAuthCheck>
-            <main vaul-drawer-wrapper="" className="bg-background">
-              {children}
-            </main>
+            <ErrorBoundary>
+              <main vaul-drawer-wrapper="" className="bg-background">
+                {children}
+              </main>
+            </ErrorBoundary>
           </ClientAuthCheck>
         </Providers>
       </body>

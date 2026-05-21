@@ -1,14 +1,26 @@
 "use client";
 
-import { use } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import { Button } from "@kononia/ui/components/button";
 import { Badge } from "@kononia/ui/components/badge";
 import { CardLoader } from "@/components/spinner";
-import { ArrowLeft, ChefHat } from "lucide-react";
-import { FASTING_COLORS } from "@kononia/ui/lib/constants";
+import { ArrowLeft, CalendarPlus, ChefHat } from "lucide-react";
+import { FASTING_COLORS, MEAL_TYPES } from "@kononia/ui/lib/constants";
+import { toast } from "sonner";
+import { Input } from "@kononia/ui/components/input";
+import { Label } from "@kononia/ui/components/label";
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaDescription,
+  CredenzaFooter,
+} from "@/components/credenza";
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -23,6 +35,19 @@ const FASTING_TYPE_COLORS: Record<string, string> = {
 export default function SnackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: snack, isLoading } = trpc.meals.getSnackById.useQuery({ id });
+  const [planOpen, setPlanOpen] = useState(false);
+  const [planDate, setPlanDate] = useState(new Date().toISOString().split("T")[0]);
+  const [planMealType, setPlanMealType] = useState("snack");
+
+  const createMealPlan = trpc.mealPlan.create.useMutation({
+    onSuccess: () => {
+      setPlanOpen(false);
+      toast.success("Snack added to your plan!");
+    },
+    onError: () => {
+      toast.error("Failed to add snack to plan");
+    },
+  });
 
   if (isLoading) {
     return (
@@ -62,27 +87,55 @@ export default function SnackDetailPage({ params }: { params: Promise<{ id: stri
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw"
           />
-        </div>
-      ) : (
-        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center mb-6">
-          <ChefHat className="h-14 w-14 text-muted-foreground/30" />
-        </div>
+      </div>
+      {snack.description && (
+        <p className="text-foreground leading-relaxed">{snack.description}</p>
       )}
 
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <h1 className="font-serif text-3xl sm:text-4xl text-foreground">{snack.name}</h1>
-          <Badge className={`text-sm w-fit ${fastingColor}`}>
-            {fastingLabel}
-          </Badge>
-        </div>
-
-        <p className="text-lg text-muted-foreground">{snack.cuisine}</p>
-        
-        {snack.description && (
-          <p className="text-foreground leading-relaxed">{snack.description}</p>
-        )}
-      </div>
+      <Credenza open={planOpen} onOpenChange={setPlanOpen}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <CredenzaTitle>Plan This Snack</CredenzaTitle>
+            <CredenzaDescription>
+              Choose a date and meal type to add {snack.name} to your plan
+            </CredenzaDescription>
+          </CredenzaHeader>
+          <CredenzaBody className="space-y-4">
+            <div>
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={planDate}
+                onChange={(e) => setPlanDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Meal Type</Label>
+              <div className="flex gap-2 flex-wrap mt-1">
+                {MEAL_TYPES.map((type) => (
+                  <Button
+                    key={type.value}
+                    variant={planMealType === type.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPlanMealType(type.value)}
+                  >
+                    {type.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CredenzaBody>
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setPlanOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => createMealPlan.mutate({ date: planDate, mealId: id, mealType: planMealType as "breakfast" | "lunch" | "dinner" | "snack" })}>
+              Add to Plan
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </div>
   );
 }

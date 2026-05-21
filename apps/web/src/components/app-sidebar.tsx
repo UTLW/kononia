@@ -1,27 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@kononia/ui/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@kononia/ui/components/button";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-} from "@kononia/ui/components/sidebar";
-import { Logo } from "@/components/logo";
-import { 
-  Home, 
-  CalendarDays, 
-  UtensilsCrossed, 
-  Salad, 
-  Settings, 
-  LogOut,
-} from "lucide-react";
+import { Loader2, Home, CalendarDays, UtensilsCrossed, Salad, Settings, LogOut } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -35,6 +20,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const [signingOut, setSigningOut] = useState(false);
 
   if (!session) return null;
 
@@ -76,7 +62,9 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          disabled={signingOut}
           onClick={() => {
+            setSigningOut(true);
             authClient.signOut({
               fetchOptions: {
                 onSuccess: () => {
@@ -86,8 +74,12 @@ export function AppSidebar() {
             });
           }}
         >
-          <LogOut className="h-5 w-5 mr-3" />
-          Sign Out
+          {signingOut ? (
+            <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+          ) : (
+            <LogOut className="h-5 w-5 mr-3" />
+          )}
+          {signingOut ? "Signing out..." : "Sign Out"}
         </Button>
       </SidebarFooter>
     </Sidebar>

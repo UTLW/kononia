@@ -21,6 +21,8 @@ export const RAW_COLORS = {
   secondary: "#4A7C59",
   accent: "#C9A96E",
   border: "#E8DFD5",
+  background: "#FDF8F3",
+  card: "#FAF5ED",
   strict: "#722F37",
   regular: "#C9A96E",
   feast: "#4A7C59",

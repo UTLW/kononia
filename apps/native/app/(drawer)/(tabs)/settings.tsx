@@ -5,13 +5,14 @@ import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import { Container } from "@/components/container";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
+import { RAW_COLORS } from "@kononia/ui/lib/constants";
 
 const COLORS = {
-  primary: "#722F37",
-  secondary: "#4A7C59",
-  accent: "#C9A96E",
-  background: "#FDF8F3",
-  card: "#FAF5ED",
+  primary: RAW_COLORS.strict,
+  secondary: RAW_COLORS.feast,
+  accent: RAW_COLORS.regular,
+  background: RAW_COLORS.background,
+  card: RAW_COLORS.card,
 };
 
 export default function SettingsTab() {
