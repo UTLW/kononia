@@ -39,9 +39,9 @@
   --sidebar-accent-foreground: #2D1F14;
   --sidebar-border: #E8DFD5;
   --sidebar-ring: #722F37;
-  --fast-strict: #4A7C59;
-  --fast-regular: #722F37;
-  --fast-feast: #C9A96E;
+  --fast-strict: #722F37;
+  --fast-regular: #C9A96E;
+  --fast-feast: #4A7C59;
 }
 
 .dark {
@@ -76,9 +76,9 @@
   --sidebar-accent-foreground: #FDF8F3;
   --sidebar-border: #3D2F24;
   --sidebar-ring: #9A4A54;
-  --fast-strict: #5A8C69;
-  --fast-regular: #9A4A54;
-  --fast-feast: #D4B87A;
+  --fast-strict: #9A4A54;
+  --fast-regular: #D4B87A;
+  --fast-feast: #5A8C69;
 }
 
 @theme inline {

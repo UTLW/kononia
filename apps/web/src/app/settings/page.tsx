@@ -20,7 +20,7 @@ import {
   CredenzaFooter,
   CredenzaHeader,
   CredenzaTitle,
-} from "@/components/ui/credenza";
+} from "@/components/credenza";
 
 function SuccessModal() {
   const [customerState, setCustomerState] = useState<any>(null);

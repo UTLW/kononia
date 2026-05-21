@@ -26,12 +26,8 @@ export const metadata: Metadata = {
   title: "ⲔⲞⲚⲞⲚⲒⲀ",
   description: "Orthodox Christian Family Fasting Companion",
   icons: {
-    icon: [
-      { url: "/favicon.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [
-      { url: "/app-icon.png", sizes: "180x180" },
-    ],
+    icon: [{ url: "/favicon.png", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/app-icon.png", sizes: "180x180" }],
   },
   manifest: "/manifest.json",
   themeColor: "#722F37",
@@ -49,10 +45,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${lora.variable} ${dmSans.variable} ${cormorant.variable} antialiased overflow-x-hidden`}>
+      <body
+        className={`${lora.variable} ${dmSans.variable} ${cormorant.variable} antialiased overflow-x-hidden`}
+      >
         <Providers>
           <ClientAuthCheck>
-            {children}
+            <main vaul-drawer-wrapper="" className="bg-background">
+              {children}
+            </main>
           </ClientAuthCheck>
         </Providers>
       </body>

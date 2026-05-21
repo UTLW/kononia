@@ -9,7 +9,9 @@ export const fastDays = sqliteTable("fast_days", {
   fastingType: text("fasting_type").notNull(),
   isToday: integer("is_today", { mode: "boolean" }).default(false),
   fastNotes: text("fast_notes"),
-});
+}, (table) => ({
+  dateIdx: index("fast_days_date_idx").on(table.date),
+}));
 
 export const fastDayRelations = relations(fastDays, ({ one }) => ({
   season: one(seasons, {

@@ -7,17 +7,12 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
+import { FASTING_COLORS } from "@kononia/ui/lib/constants";
 
 const fastingColors: Record<string, string> = {
-  strict: "from-[#5a252d] to-[#722F37]",
-  regular: "from-[#a8894f] to-[#C9A96E]",
-  feast: "from-[#3d6b4a] to-[#4A7C59]",
-};
-
-const fastingBgColors: Record<string, string> = {
-  strict: "bg-[#722F37]",
-  regular: "bg-[#C9A96E]",
-  feast: "bg-[#4A7C59]",
+  strict: "from-[#5a252d] to-[var(--fast-strict)]",
+  regular: "from-[#a8894f] to-[var(--fast-regular)]",
+  feast: "from-[#3d6b4a] to-[var(--fast-feast)]",
 };
 
 function getGreeting(): string {
@@ -115,7 +110,7 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <Card className="bg-card">
             <CardContent className="p-4 text-center">
-              <p className="text-3xl font-serif text-[#722F37]">{fastDaysThisMonth}</p>
+              <p className="text-3xl font-serif text-[var(--fast-strict)]">{fastDaysThisMonth}</p>
               <p className="text-xs text-muted-foreground">Fasting days this month</p>
             </CardContent>
           </Card>
@@ -145,7 +140,7 @@ export default function DashboardPage() {
                   <p className="text-lg font-medium">{new Date(fast.date).getDate()}</p>
                   <Badge 
                     className="mt-1 text-[10px]"
-                    style={{ backgroundColor: fast.fastingType === "strict" ? "#722F37" : "#C9A96E" }}
+                    style={{ backgroundColor: fast.fastingType === "strict" ? "var(--fast-strict)" : "var(--fast-regular)" }}
                   >
                     {fast.fastingType === "strict" ? "Strict" : "Regular"}
                   </Badge>
@@ -158,7 +153,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/calendar" className="block">
-          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
               <span className="text-4xl block mb-3">📅</span>
               <span className="font-medium">Calendar</span>
@@ -167,7 +162,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
         <Link href="/meals" className="block">
-          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
               <span className="text-4xl block mb-3">🍽️</span>
               <span className="font-medium">Meals</span>
@@ -176,7 +171,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
         <Link href="/snacks" className="block">
-          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
               <span className="text-4xl block mb-3">🥗</span>
               <span className="font-medium">Snacks</span>
@@ -185,7 +180,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
         <Link href="/settings" className="block">
-          <Card className="cursor-pointer hover:shadow-lg hover:border-[#722F37]/30 transition-all h-full border-2 border-transparent">
+          <Card className="cursor-pointer hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all h-full border-2 border-transparent">
             <CardContent className="py-6 text-center">
               <span className="text-4xl block mb-3">⚙️</span>
               <span className="font-medium">Settings</span>
@@ -199,19 +194,19 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Today&apos;s Meal Ideas</CardTitle>
-            <Link href="/meals" className="text-sm text-[#722F37] hover:underline">View All →</Link>
+            <Link href="/meals" className="text-sm text-[var(--fast-strict)] hover:underline">View All →</Link>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {meals.map((meal) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`}>
-                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[#722F37]/30 transition-all">
+                  <div className="rounded-lg border bg-card overflow-hidden hover:shadow-lg hover:border-[var(--fast-strict)]/30 transition-all">
                     {meal.imageUrl && (
                       <img src={meal.imageUrl} alt={meal.name} className="w-full h-20 object-cover" />
                     )}
                     <div className="p-3">
                       <h3 className="font-medium text-sm truncate">{meal.name}</h3>
-                      <Badge variant="outline" className="text-xs mt-1 capitalize text-[#722F37] border-[#722F37]">{meal.fastingType}</Badge>
+                      <Badge variant="outline" className="text-xs mt-1 capitalize text-[var(--fast-strict)] border-[var(--fast-strict)]">{meal.fastingType}</Badge>
                     </div>
                   </div>
                 </Link>

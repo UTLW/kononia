@@ -10,6 +10,7 @@ import { Checkbox } from "@kononia/ui/components/checkbox";
 import { CardLoader } from "@/components/spinner";
 import { ArrowLeft, Clock, Users, ChefHat } from "lucide-react";
 import { Card, CardContent } from "@kononia/ui/components/card";
+import { FASTING_COLORS } from "@kononia/ui/lib/constants";
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -18,9 +19,9 @@ const FASTING_TYPE_LABELS: Record<string, string> = {
 };
 
 const FASTING_TYPE_COLORS: Record<string, string> = {
-  strict: "bg-[#722F37] text-white",
-  regular: "bg-[#C9A96E] text-white",
-  both: "bg-[#4A7C59] text-white",
+  strict: `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}`,
+  regular: `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}`,
+  both: `${FASTING_COLORS.feast.bg} ${FASTING_COLORS.feast.text}`,
 };
 
 export default function MealDetailPage({ params }: { params: Promise<{ id: string }> }) {

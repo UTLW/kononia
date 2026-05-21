@@ -10,38 +10,32 @@ import { Badge } from "@kononia/ui/components/badge";
 import { Spinner } from "@/components/spinner";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { FASTING_COLORS, MEAL_TYPES } from "@kononia/ui/lib/constants";
 
 const FASTING_TYPE_CONFIG: Record<string, { bg: string; label: string; textClass: string; borderColor: string }> = {
   strict: { 
-    bg: "bg-[#722F37]", 
+    bg: FASTING_COLORS.strict.bg, 
     label: "Strict Fast", 
-    textClass: "text-white",
-    borderColor: "border-[#722F37]"
+    textClass: FASTING_COLORS.strict.text,
+    borderColor: "border-[var(--fast-strict)]"
   },
   regular: { 
-    bg: "bg-[#C9A96E]", 
+    bg: FASTING_COLORS.regular.bg, 
     label: "Regular Fast", 
-    textClass: "text-white",
-    borderColor: "border-[#C9A96E]"
+    textClass: FASTING_COLORS.regular.text,
+    borderColor: "border-[var(--fast-regular)]"
   },
   feast: { 
-    bg: "bg-[#4A7C59]", 
+    bg: FASTING_COLORS.feast.bg, 
     label: "Feast Day", 
-    textClass: "text-white",
-    borderColor: "border-[#4A7C59]"
+    textClass: FASTING_COLORS.feast.text,
+    borderColor: "border-[var(--fast-feast)]"
   },
 };
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
-];
-
-const MEAL_TYPES = [
-  { value: "breakfast", label: "Breakfast" },
-  { value: "lunch", label: "Lunch" },
-  { value: "dinner", label: "Dinner" },
-  { value: "snack", label: "Snack" },
 ];
 
 export default function CalendarPage() {
@@ -149,7 +143,7 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl text-foreground">Fasting Calendar</h1>
         {currentSeason && (
-          <Badge className="bg-[#C9A96E] text-white">
+          <Badge className={`${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}`}>
             {currentSeason.name}
           </Badge>
         )}
@@ -200,10 +194,10 @@ export default function CalendarPage() {
                 },
               }}
               modifiersClassNames={{
-                strictFast: "bg-[#722F37] text-white rounded-full",
-                regularFast: "bg-[#C9A96E] text-white rounded-full",
-                feast: "bg-[#4A7C59] text-white rounded-full",
-                hasMeals: "ring-2 ring-[#722F37] ring-offset-2",
+                strictFast: `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text} rounded-full`,
+                regularFast: `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text} rounded-full`,
+                feast: `${FASTING_COLORS.feast.bg} ${FASTING_COLORS.feast.text} rounded-full`,
+                hasMeals: "ring-2 ring-[var(--fast-regular)] ring-offset-2",
               }}
             />
           )}
@@ -212,19 +206,19 @@ export default function CalendarPage() {
 
       <div className="flex gap-4 justify-center flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-[#722F37]" />
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "var(--fast-strict)" }} />
           <span className="text-sm">Strict Fast</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-[#C9A96E]" />
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "var(--fast-regular)" }} />
           <span className="text-sm">Regular Fast</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-[#4A7C59]" />
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "var(--fast-feast)" }} />
           <span className="text-sm">Feast</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full border-2 border-[#722F37]" />
+          <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: "var(--fast-strict)" }} />
           <span className="text-sm">Planned Meals</span>
         </div>
       </div>
@@ -275,7 +269,7 @@ export default function CalendarPage() {
                         variant={selectedMealType === type.value ? "default" : "outline"}
                         size="sm"
                         onClick={() => setSelectedMealType(type.value)}
-                        className={selectedMealType === type.value ? "bg-[#722F37]" : ""}
+                        className={selectedMealType === type.value ? "bg-[var(--fast-strict)]" : ""}
                       >
                         {type.label}
                       </Button>
@@ -308,7 +302,7 @@ export default function CalendarPage() {
                       <div key={plan.id} className="flex items-center justify-between p-2 rounded bg-muted">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className="capitalize">{plan.mealType}</Badge>
-                          <Link href={`/meal/${plan.meal.id}`} className="hover:text-[#722F37] text-sm">
+                          <Link href={`/meal/${plan.meal.id}`} className="hover:text-[var(--fast-strict)] text-sm">
                             {plan.meal.name}
                           </Link>
                         </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { Badge } from "@kononia/ui/components/badge";
 import { CardLoader } from "@/components/spinner";
+import { FASTING_COLORS } from "@kononia/ui/lib/constants";
 
 export default function SnacksPage() {
   const { data: snacks, isLoading } = trpc.meals.getSnacks.useQuery({});
@@ -36,8 +37,8 @@ export default function SnacksPage() {
                 <p className="text-sm text-muted-foreground">{snack.cuisine}</p>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{snack.description}</p>
                 <Badge className={`mt-2 text-xs ${
-                  snack.fastingType === "strict" ? "bg-[#722F37] text-white" :
-                  "bg-[#C9A96E] text-white"
+                  snack.fastingType === "strict" ? `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}` :
+                  `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}`
                 }`}>
                   {snack.fastingType === "strict" ? "Strict Fast" : "Regular Fast"}
                 </Badge>

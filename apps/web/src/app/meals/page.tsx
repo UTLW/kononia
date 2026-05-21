@@ -9,30 +9,8 @@ import { Card, CardContent } from "@kononia/ui/components/card";
 import { Badge } from "@kononia/ui/components/badge";
 import { Spinner, CardLoader } from "@/components/spinner";
 import { toast } from "sonner";
-import { 
-  Search, 
-  Filter, 
-  X, 
-  ChevronLeft, 
-  ChevronRight,
-  ChefHat,
-  Clock,
-  Users
-} from "lucide-react";
-
-const CUISINE_OPTIONS = [
-  "Egyptian",
-  "Italian",
-  "Mexican",
-  "Lebanese",
-  "American",
-  "Turkish",
-  "Chinese",
-  "Japanese",
-  "Greek",
-  "Middle Eastern",
-  "Spanish",
-];
+import { Search, X, ChevronRight, ChefHat, Clock, Users } from "lucide-react";
+import { CUISINE_OPTIONS, FASTING_COLORS } from "@kononia/ui/lib/constants";
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -269,9 +247,9 @@ export default function MealsPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">{meal.cuisineTag}</span>
                       <Badge className={`text-xs ${
-                        meal.fastingType === "strict" ? "bg-[#722F37] text-white" :
-                        meal.fastingType === "regular" ? "bg-[#C9A96E] text-white" :
-                        "bg-[#4A7C59] text-white"
+                        meal.fastingType === "strict" ? `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}` :
+                        meal.fastingType === "regular" ? `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}` :
+                        `${FASTING_COLORS.feast.bg} ${FASTING_COLORS.feast.text}`
                       }`}>
                         {meal.fastingType === "both" ? "All" : meal.fastingType === "strict" ? "Strict" : "Regular"}
                       </Badge>

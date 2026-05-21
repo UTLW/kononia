@@ -31,5 +31,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # IntelliJ based IDEs
 .idea
 
+# local database (turso/sqlite)
+local.db
+local.db-shm
+local.db-wal
+
 # Finder (MacOS) folder config
 .DS_Store

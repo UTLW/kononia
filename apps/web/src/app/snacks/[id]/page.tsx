@@ -9,6 +9,7 @@ import { Badge } from "@kononia/ui/components/badge";
 import { Card, CardContent } from "@kononia/ui/components/card";
 import { CardLoader } from "@/components/spinner";
 import { ArrowLeft, ChefHat } from "lucide-react";
+import { FASTING_COLORS } from "@kononia/ui/lib/constants";
 
 const FASTING_TYPE_LABELS: Record<string, string> = {
   strict: "Strict Fast",
@@ -16,8 +17,8 @@ const FASTING_TYPE_LABELS: Record<string, string> = {
 };
 
 const FASTING_TYPE_COLORS: Record<string, string> = {
-  strict: "bg-[#722F37] text-white",
-  regular: "bg-[#C9A96E] text-white",
+  strict: `${FASTING_COLORS.strict.bg} ${FASTING_COLORS.strict.text}`,
+  regular: `${FASTING_COLORS.regular.bg} ${FASTING_COLORS.regular.text}`,
 };
 
 export default function SnackDetailPage({ params }: { params: Promise<{ id: string }> }) {
